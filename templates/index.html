@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Revue de presse Tech</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & Variables ───────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #0a0a0a;
+  --surface:   #141414;
+  --surface2:  #1c1c1c;
+  --border:    rgba(255,255,255,0.07);
+  --red:       #d0021b;
+  --red-glow:  rgba(208,2,27,0.18);
+  --text:      #e8e8e8;
+  --muted:     #666;
+  --dim:       #3a3a3a;
+  --font-sans: 'DM Sans', sans-serif;
+  --font-serif:'DM Serif Display', serif;
+  --radius:    10px;
+  --transition: 220ms ease;
+}
+
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Layout ──────────────────────────────────────────────────────────────── */
+.wrapper { max-width: 1400px; margin: 0 auto; padding: 0 32px; }
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+header {
+  border-bottom: 1px solid var(--border);
+  padding: 28px 0 22px;
+  margin-bottom: 32px;
+}
+.header-inner {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.logo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.logo-eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--red);
+}
+.logo-title {
+  font-family: var(--font-serif);
+  font-size: 2.2rem;
+  color: var(--text);
+  line-height: 1;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px;
+}
+.tab {
+  padding: 8px 20px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.tab.active {
+  background: var(--red);
+  color: #fff;
+}
+.tab:not(.active):hover { color: var(--text); background: var(--surface2); }
+
+/* ── Toolbar ─────────────────────────────────────────────────────────────── */
+.toolbar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.search-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+  max-width: 360px;
+}
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: 14px;
+  pointer-events: none;
+}
+input[type="text"], select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  padding: 9px 14px;
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  width: 100%;
+}
+input[type="text"] { padding-left: 36px; }
+input[type="text"]:focus, select:focus {
+  border-color: var(--red);
+  box-shadow: 0 0 0 3px var(--red-glow);
+}
+select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+select option { background: #1c1c1c; }
+
+.toolbar-selects { display: flex; gap: 10px; flex-wrap: wrap; }
+.toolbar-selects select { min-width: 160px; }
+
+.btn-refresh {
+  padding: 9px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-refresh:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+.btn-refresh.spinning .refresh-icon { animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Meta bar ────────────────────────────────────────────────────────────── */
+.meta-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.count-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 3px 12px;
+  letter-spacing: 0.3px;
+}
+.last-update {
+  font-size: 11px;
+  color: var(--dim);
+  margin-left: auto;
+}
+
+/* Error banner */
+.error-banner {
+  background: rgba(208,2,27,0.08);
+  border: 1px solid rgba(208,2,27,0.25);
+  border-radius: var(--radius);
+  padding: 10px 16px;
+  font-size: 12px;
+  color: #ff6b6b;
+  margin-bottom: 12px;
+}
+
+/* ── Grid ────────────────────────────────────────────────────────────────── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+@media (max-width: 1100px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 760px)  { .grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 480px)  { .grid { grid-template-columns: 1fr; } }
+
+/* ── Card ────────────────────────────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+  animation: fadeUp 0.35s ease both;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.card:hover {
+  border-color: rgba(208,2,27,0.6);
+  transform: translateY(-5px);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(208,2,27,0.1);
+}
+
+/* Stretch link — full card clickable, pure CSS */
+.card-link {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: 12px;
+}
+
+.card-thumb {
+  width: 100%;
+  height: 158px;
+  object-fit: cover;
+  display: block;
+  background: var(--surface2);
+  transition: transform 0.4s ease;
+}
+.card:hover .card-thumb { transform: scale(1.03); }
+
+.card-thumb-placeholder {
+  width: 100%;
+  height: 158px;
+  background: linear-gradient(135deg, var(--surface2) 0%, #202020 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  opacity: 0.35;
+}
+
+.card-body {
+  padding: 14px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  flex: 1;
+}
+.card-source {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--red);
+}
+.card-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--text);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.card-summary {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.55;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  flex: 1;
+}
+.card-footer {
+  display: flex;
+  align-items: center;
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+  margin-top: 4px;
+}
+.card-date {
+  font-size: 10px;
+  color: #595959;
+  letter-spacing: 0.2px;
+}
+
+/* ── Empty / Loading states ──────────────────────────────────────────────── */
+.state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--muted);
+}
+.state-icon { font-size: 48px; margin-bottom: 16px; }
+.state h3 { font-family: var(--font-serif); font-size: 1.4rem; color: var(--text); margin-bottom: 8px; font-weight: 400; }
+.state p { font-size: 13px; color: var(--muted); }
+
+/* Skeleton loader */
+.skeleton {
+  background: linear-gradient(90deg, var(--surface) 25%, var(--surface2) 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: 6px;
+}
+@keyframes shimmer { to { background-position: -200% 0; } }
+.card-skeleton {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+/* ── Modal ───────────────────────────────────────────────────────────────── */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.82);
+  backdrop-filter: blur(6px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.modal-backdrop.open {
+  opacity: 1;
+  pointer-events: all;
+}
+.modal {
+  background: var(--surface);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 640px;
+  max-height: 88vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(20px) scale(0.97);
+  transition: transform 0.25s ease;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.7);
+}
+.modal-backdrop.open .modal {
+  transform: translateY(0) scale(1);
+}
+.modal-header {
+  padding: 22px 24px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  border-radius: 16px 16px 0 0;
+  z-index: 1;
+}
+.modal-source {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--red);
+}
+.modal-title {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  color: var(--text);
+  line-height: 1.4;
+  font-weight: 400;
+}
+.modal-meta {
+  font-size: 11px;
+  color: var(--muted);
+}
+.modal-body {
+  padding: 24px;
+  flex: 1;
+}
+.modal-ai-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+.modal-ai-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--red);
+  animation: pulse 1.5s ease infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.7); }
+}
+.modal-summary {
+  font-size: 14.5px;
+  line-height: 1.75;
+  color: #ccc;
+  min-height: 80px;
+}
+.modal-summary.loading {
+  color: var(--muted);
+  font-style: italic;
+}
+.modal-footer {
+  padding: 16px 24px 22px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.btn-original {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: var(--red);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background var(--transition), transform var(--transition);
+}
+.btn-original:hover { background: #b00018; transform: translateY(-1px); }
+.btn-close-modal {
+  padding: 10px 16px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.btn-close-modal:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+
+/* Make card clickable via button, not <a> */
+.card { cursor: pointer; }
+.card-link { display: none; } /* on cache le lien stretch, on gère via JS */
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+  <!-- Header -->
+  <header>
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-eyebrow">Tech Watch</span>
+        <h1 class="logo-title">Revue de presse</h1>
+      </div>
+      <div class="tabs">
+        <button class="tab active" data-type="articles">Articles presse</button>
+        <button class="tab" data-type="videos">Vidéos YouTube</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="search" placeholder="Rechercher…" autocomplete="off">
+    </div>
+    <div class="toolbar-selects">
+      <select id="filter-source">
+        <option value="">Toutes les sources</option>
+      </select>
+      <select id="filter-period">
+        <option value="">Toutes les dates</option>
+        <option value="today">Aujourd'hui</option>
+        <option value="week">Cette semaine</option>
+        <option value="month">Ce mois</option>
+      </select>
+    </div>
+    <button class="btn-refresh" id="btn-refresh">
+      <span class="refresh-icon">↻</span> Actualiser
+    </button>
+  </div>
+
+  <!-- Meta -->
+  <div class="meta-bar">
+    <span class="count-badge" id="count">— résultats</span>
+    <span class="last-update" id="last-update"></span>
+  </div>
+
+  <!-- Errors -->
+  <div id="errors"></div>
+
+  <!-- Grid -->
+  <div class="grid" id="grid"></div>
+</div>
+
+<!-- Modal résumé IA -->
+<div class="modal-backdrop" id="modal-backdrop">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title-el">
+    <div class="modal-header">
+      <span class="modal-source" id="modal-source"></span>
+      <h2 class="modal-title" id="modal-title-el"></h2>
+      <span class="modal-meta" id="modal-meta"></span>
+    </div>
+    <div class="modal-body">
+      <div class="modal-ai-label">
+        <span class="modal-ai-dot" id="ai-dot"></span>
+        Résumé par IA
+      </div>
+      <p class="modal-summary loading" id="modal-summary">Analyse de l'article en cours…</p>
+    </div>
+    <div class="modal-footer">
+      <a class="btn-original" id="modal-link" href="#" target="_blank" rel="noopener">
+        ↗ Lire l'article original
+      </a>
+      <button class="btn-close-modal" id="btn-close-modal">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+const state = { type: 'articles', search: '', source: '', period: '' };
+let debounceTimer = null;
+
+// ── DOM refs ───────────────────────────────────────────────────────────────
+const grid        = document.getElementById('grid');
+const countBadge  = document.getElementById('count');
+const lastUpdate  = document.getElementById('last-update');
+const errorsEl    = document.getElementById('errors');
+const searchEl    = document.getElementById('search');
+const sourceEl    = document.getElementById('filter-source');
+const periodEl    = document.getElementById('filter-period');
+const refreshBtn  = document.getElementById('btn-refresh');
+
+// Modal
+const backdrop      = document.getElementById('modal-backdrop');
+const modalSource   = document.getElementById('modal-source');
+const modalTitleEl  = document.getElementById('modal-title-el');
+const modalMeta     = document.getElementById('modal-meta');
+const modalSummary  = document.getElementById('modal-summary');
+const modalLink     = document.getElementById('modal-link');
+const aiDot         = document.getElementById('ai-dot');
+const btnClose      = document.getElementById('btn-close-modal');
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function relativeTime(ts) {
+  const delta = Math.floor(Date.now() / 1000 - ts);
+  if (delta < 60)   return "à l'instant";
+  if (delta < 3600) return `il y a ${Math.floor(delta / 60)} min`;
+  return `il y a ${Math.floor(delta / 3600)} h`;
+}
+
+function skeletons(n = 8) {
+  return Array(n).fill(`
+    <div class="card-skeleton">
+      <div class="skeleton sk-img"></div>
+      <div class="sk-body">
+        <div class="skeleton sk-src"></div>
+        <div class="skeleton sk-t1"></div>
+        <div class="skeleton sk-t2"></div>
+        <div class="skeleton sk-sum"></div>
+      </div>
+    </div>`).join('');
+}
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function cardHTML(item, idx) {
+  const thumb = item.image
+    ? `<img class="card-thumb" src="${escHtml(item.image)}" alt="${escHtml(item.title)}" loading="lazy">`
+    : `<div class="card-thumb-placeholder">${item.is_video ? '▶' : '📰'}</div>`;
+  const summary = item.summary
+    ? `<p class="card-summary">${escHtml(item.summary)}</p>` : '';
+  // data-* attributes drive the modal — no href needed on the card itself
+  return `
+    <article class="card" style="animation-delay:${idx * 35}ms"
+      data-url="${escHtml(item.link)}"
+      data-title="${escHtml(item.title)}"
+      data-source="${escHtml(item.source)}"
+      data-date="${escHtml(item.date_display)}">
+      ${thumb}
+      <div class="card-body">
+        <span class="card-source">${escHtml(item.source)}</span>
+        <h2 class="card-title">${escHtml(item.title)}</h2>
+        ${summary}
+        <div class="card-footer">
+          <span class="card-date">📅 ${item.date_display}</span>
+          <span style="font-size:10px;color:#444;margin-left:auto;">✦ Résumé IA</span>
+        </div>
+      </div>
+    </article>`;
+}
+
+// ── Modal ──────────────────────────────────────────────────────────────────
+function openModal(item) {
+  // Populate header
+  modalSource.textContent  = item.source;
+  modalTitleEl.textContent = item.title;
+  modalMeta.textContent    = `📅 ${item.date}`;
+  modalLink.href           = item.url;
+
+  // Reset body
+  modalSummary.textContent = 'Analyse de l\'article en cours…';
+  modalSummary.classList.add('loading');
+  aiDot.style.animationPlayState = 'running';
+
+  // Show modal
+  backdrop.classList.add('open');
+  document.body.style.overflow = 'hidden';
+
+  // Call API
+  fetch('/api/summarize', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url: item.url, title: item.title }),
+  })
+  .then(r => r.json())
+  .then(data => {
+    modalSummary.textContent = data.summary || 'Aucun résumé disponible.';
+    modalSummary.classList.remove('loading');
+    aiDot.style.animationPlayState = 'paused';
+    aiDot.style.opacity = '1';
+  })
+  .catch(() => {
+    modalSummary.textContent = 'Erreur lors de la génération du résumé.';
+    modalSummary.classList.remove('loading');
+  });
+}
+
+function closeModal() {
+  backdrop.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// Delegate card clicks
+grid.addEventListener('click', e => {
+  const card = e.target.closest('.card');
+  if (!card) return;
+  openModal({
+    url:    card.dataset.url,
+    title:  card.dataset.title,
+    source: card.dataset.source,
+    date:   card.dataset.date,
+  });
+});
+
+btnClose.addEventListener('click', closeModal);
+backdrop.addEventListener('click', e => { if (e.target === backdrop) closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// ── Fetch & Render ─────────────────────────────────────────────────────────
+async function load(forceRefresh = false) {
+  refreshBtn.classList.toggle('spinning', forceRefresh);
+  grid.innerHTML = skeletons();
+  errorsEl.innerHTML = '';
+
+  const params = new URLSearchParams({
+    type:    state.type,
+    search:  state.search,
+    source:  state.source,
+    period:  state.period,
+    refresh: forceRefresh ? '1' : '0',
+  });
+
+  try {
+    const res  = await fetch(`/api/feed?${params}`);
+    const data = await res.json();
+
+    sourceEl.innerHTML = '<option value="">Toutes les sources</option>' +
+      data.sources.map(s =>
+        `<option value="${s}"${s === state.source ? ' selected' : ''}>${s}</option>`
+      ).join('');
+
+    data.errors.forEach(e => {
+      errorsEl.innerHTML += `<div class="error-banner">⚠️ ${escHtml(e)}</div>`;
+    });
+
+    const n = data.total;
+    countBadge.textContent = `${n} résultat${n !== 1 ? 's' : ''}`;
+    lastUpdate.textContent = `Mis à jour ${relativeTime(data.fetch_ts)}`;
+
+    if (data.items.length === 0) {
+      const msg = state.search
+        ? `Aucun résultat pour « ${escHtml(state.search)} »`
+        : 'Aucun contenu disponible pour ce filtre.';
+      grid.innerHTML = `
+        <div class="state">
+          <div class="state-icon">🔍</div>
+          <h3>${msg}</h3>
+          <p>Essayez d'autres mots-clés ou élargissez les filtres.</p>
+        </div>`;
+    } else {
+      grid.innerHTML = data.items.map((item, i) => cardHTML(item, i)).join('');
+    }
+  } catch (err) {
+    grid.innerHTML = `
+      <div class="state">
+        <div class="state-icon">📡</div>
+        <h3>Erreur de connexion</h3>
+        <p>Impossible de joindre le serveur. Vérifiez que FastAPI tourne bien.</p>
+      </div>`;
+  } finally {
+    refreshBtn.classList.remove('spinning');
+  }
+}
+
+// ── Events ─────────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    state.type   = btn.dataset.type;
+    state.source = '';
+    sourceEl.value = '';
+    load();
+  });
+});
+
+searchEl.addEventListener('input', () => {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => { state.search = searchEl.value.trim(); load(); }, 380);
+});
+
+sourceEl.addEventListener('change', () => { state.source = sourceEl.value; load(); });
+periodEl.addEventListener('change', () => { state.period = periodEl.value; load(); });
+refreshBtn.addEventListener('click', () => load(true));
+
+// ── Init ───────────────────────────────────────────────────────────────────
+load();
+</script>
+</body>
+</html>
