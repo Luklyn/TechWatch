@@ -1,0 +1,5 @@
+fastapi
+uvicorn[standard]
+feedparser
+requests
+jinja2
