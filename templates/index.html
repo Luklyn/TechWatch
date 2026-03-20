@@ -607,9 +607,16 @@ function escHtml(str) {
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+function proxyImg(url, isVideo) {
+  // Les thumbnails YouTube chargent directement sans problème de Referer
+  if (isVideo || !url) return url;
+  return '/api/img?url=' + encodeURIComponent(url);
+}
+
 function cardHTML(item, idx) {
-  const thumb = item.image
-    ? `<img class="card-thumb" src="${escHtml(item.image)}" alt="${escHtml(item.title)}" loading="lazy">`
+  const imgSrc = proxyImg(item.image, item.is_video);
+  const thumb = imgSrc
+    ? `<img class="card-thumb" src="${escHtml(imgSrc)}" alt="${escHtml(item.title)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\'card-thumb-placeholder\'>${item.is_video ? '▶' : '📰'}</div>'">`
     : `<div class="card-thumb-placeholder">${item.is_video ? '▶' : '📰'}</div>`;
   const summary = item.summary
     ? `<p class="card-summary">${escHtml(item.summary)}</p>` : '';
@@ -639,7 +646,10 @@ function openModal(item) {
   modalSource.textContent  = item.source;
   modalTitleEl.textContent = item.title;
   modalMeta.textContent    = `📅 ${item.date}`;
-  modalLink.href           = item.url;
+  modalLink.href        = item.url;
+  modalLink.innerHTML   = item.is_video
+    ? '&#9654; Voir la vidéo sur YouTube'
+    : '&#8599; Lire l\'article original';
 
   // Reset body
   modalSummary.textContent = 'Analyse de l\'article en cours…';
