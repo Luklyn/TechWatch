@@ -3,3 +3,5 @@ uvicorn[standard]
 feedparser
 requests
 jinja2
+httpx
+beautifulsoup4
