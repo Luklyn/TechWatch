@@ -34,6 +34,7 @@ RSS_FEEDS = {
     "Les Numériques": "https://www.lesnumeriques.com/informatique/rss.xml",
 }
 
+
 YOUTUBE_CHANNELS = {
     "Gamers Nexus":     "https://www.youtube.com/feeds/videos.xml?channel_id=UChIs72whgZI9w6d6FhwGGHA",
     "VCG":              "https://www.youtube.com/feeds/videos.xml?channel_id=UCjrj3gdo-KL2S_JN_gdNyPw",
@@ -204,20 +205,21 @@ def scrape_article(url: str) -> str:
         return ""
 
 
-def call_hf(text: str, title: str) -> str:
-    """Appelle Mistral 7B via HuggingFace Inference API et retourne un résumé en français."""
+def call_hf(text: str, title: str, is_video: bool = False) -> str:
+    """Appelle Llama via HuggingFace Inference API et retourne un résumé en français."""
+    content_type = "vidéo YouTube" if is_video else "article"
     messages = [
         {
             "role": "system",
             "content": (
-                "Tu es un assistant spécialisé en technologie. "
-                "Tu résumes des articles tech en français, en prose fluide de 5 à 8 phrases. "
-                "Tu vas droit au but sans commencer par 'Cet article' ou 'Cette vidéo'."
+                f"Tu es un assistant spécialisé en technologie. "
+                f"Tu résumes des {content_type}s tech en français, en prose fluide de 5 à 8 phrases. "
+                f"Tu vas droit au but sans commencer par 'Cet article' ou 'Cette vidéo'."
             ),
         },
         {
             "role": "user",
-            "content": f"Résume cet article intitulé « {title} » :\n\n{text[:3500]}",
+            "content": f"Résume cette {content_type} intitulée « {title} » :\n\n{text[:3500]}",
         },
     ]
     headers = {
@@ -257,10 +259,47 @@ async def api_summarize(body: dict):
         return JSONResponse({"summary": _summary_cache[url], "cached": True})
 
     text    = scrape_article(url)
-    summary = call_hf(text or f"Contenu non lisible pour : {title}", title)
+    is_video = body.get("is_video", False)
+    summary = call_hf(text or f"Contenu non lisible pour : {title}", title, is_video=is_video)
 
     # Mettre en cache uniquement si succes
     if not summary.startswith("Impossible"):
         _summary_cache[url] = summary
 
     return JSONResponse({"summary": summary})
+
+
+# ─── IMAGE PROXY ─────────────────────────────────────────────────────────────
+
+from fastapi import Response
+from urllib.parse import urlparse
+
+@app.get("/api/img")
+async def img_proxy(url: str = Query(...)):
+    """
+    Proxy d'images : récupère l'image côté serveur avec le bon Referer
+    pour contourner les restrictions hotlinking des sites.
+    """
+    try:
+        parsed   = urlparse(url)
+        referrer = f"{parsed.scheme}://{parsed.netloc}/"
+        headers  = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+            "Referer":    referrer,
+            "Accept":     "image/webp,image/apng,image/*,*/*;q=0.8",
+        }
+        r = requests.get(url, headers=headers, timeout=8, stream=True)
+        r.raise_for_status()
+        content_type = r.headers.get("Content-Type", "image/jpeg")
+        return Response(content=r.content, media_type=content_type, headers={
+            "Cache-Control": "public, max-age=86400",  # cache 24h côté navigateur
+        })
+    except Exception:
+        # Retourner une image placeholder SVG si l'image est introuvable
+        svg = '''<svg xmlns="http://www.w3.org/2000/svg" width="800" height="160" viewBox="0 0 800 160">
+  <rect width="800" height="160" fill="#1c1c1c"/>
+  <text x="400" y="88" font-family="sans-serif" font-size="32" fill="#333" text-anchor="middle">📰</text>
+</svg>'''
+        return Response(content=svg, media_type="image/svg+xml", headers={
+            "Cache-Control": "public, max-age=3600",
+        })
