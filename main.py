@@ -15,8 +15,12 @@ app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
 # ─── HUGGING FACE CONFIG ─────────────────────────────────────────────────────
-# Renseignez votre token ici, ou via variable d'environnement : HF_TOKEN=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
-HF_TOKEN = os.getenv("HF_TOKEN", "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")
+# Le token est lu depuis le fichier .env (jamais dans le code)
+from dotenv import load_dotenv
+load_dotenv()
+HF_TOKEN = os.getenv("HF_TOKEN")
+if not HF_TOKEN:
+    raise RuntimeError("HF_TOKEN manquant — créez un fichier .env avec HF_TOKEN=hf_xxx")
 HF_MODEL = "meta-llama/Llama-3.1-8B-Instruct"
 HF_URL   = "https://router.huggingface.co/v1/chat/completions"
 
@@ -26,16 +30,15 @@ RSS_FEEDS = {
     "TechPowerUp":    "https://www.techpowerup.com/rss/news",
     "Hardware & Co":  "https://hardwareand.co/actualites?format=feed&type=rss",
     "Hardware.fr":    "https://www.hardware.fr/backend/news.xml",
-    "Frandroid":      "https://www.frandroid.com/feed",
+    "Frandroid":      "https://www.frandroid.com/produits/pc-ordinateurs/feed",
     "Les Numériques": "https://www.lesnumeriques.com/informatique/rss.xml",
 }
 
 YOUTUBE_CHANNELS = {
     "Gamers Nexus":     "https://www.youtube.com/feeds/videos.xml?channel_id=UChIs72whgZI9w6d6FhwGGHA",
     "VCG":              "https://www.youtube.com/feeds/videos.xml?channel_id=UCjrj3gdo-KL2S_JN_gdNyPw",
-    "Hardware Canucks": "https://www.youtube.com/feeds/videos.xml?channel_id=UCTzLRZUgelatKZ4nyIKcAbg",
-    "Hardware Unboxed": "https://www.youtube.com/feeds/videos.xml?channel_id=UCI8iQa1hv7oV_Z8D35vVuSg",
-    "Matt Lee":         "https://www.youtube.com/feeds/videos.xml?channel_id=UCGHzpEcSwfBQJAitgw2pgVQ",
+    "Hardware Canucks": "https://www.youtube.com/feeds/videos.xml?channel_id=UCVn2OUZWZ0V7xC7n0z7nK0w",
+    "Hardware Unboxed": "https://www.youtube.com/feeds/videos.xml?channel_id=UCI8iQa1hv7oV_Z8B35vVuSg",
 }
 
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
