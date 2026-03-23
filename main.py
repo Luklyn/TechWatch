@@ -30,7 +30,12 @@ RSS_FEEDS = {
     "TechPowerUp":    "https://www.techpowerup.com/rss/news",
     "Hardware & Co":  "https://hardwareand.co/actualites?format=feed&type=rss",
     "Hardware.fr":    "https://www.hardware.fr/backend/news.xml",
-    "Les Numériques": "https://www.lesnumeriques.com/informatique/rss.xml",
+    "Cowcotland":     "https://www.cowcotland.com/backend.php",
+    "Tom's Hardware": "https://www.tomshardware.com/feeds/all",
+    "01net":          "https://www.01net.com/actualites/feed",
+    "The Verge":      "https://www.theverge.com/rss/index.xml",
+    "Ars Technica":   "https://feeds.arstechnica.com/arstechnica/index",
+    "Digital Foundry": "https://www.digitalfoundry.net/feed",
 }
 
 
@@ -40,6 +45,8 @@ YOUTUBE_CHANNELS = {
     "Hardware Canucks": "https://www.youtube.com/feeds/videos.xml?channel_id=UCTzLRZUgelatKZ4nyIKcAbg",
     "Hardware Unboxed": "https://www.youtube.com/feeds/videos.xml?channel_id=UCI8iQa1hv7oV_Z8D35vVuSg",
     "Matt Lee":         "https://www.youtube.com/feeds/videos.xml?channel_id=UCGHzpEcSwfBQJAitgw2pgVQ",
+    "Der8auer En" :     "https://www.youtube.com/feeds/videos.xml?channel_id=UCGsaijjOJshS2_ZmMNZgS-g",
+    "Linus Tech Tips":  "https://www.youtube.com/feeds/videos.xml?channel_id=UCXuqSBlHAE6Xw-yeJA0Tunw",
 }
 
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
