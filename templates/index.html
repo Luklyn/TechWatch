@@ -26,6 +26,40 @@
   --transition: 220ms ease;
 }
 
+/* ── Light mode ──────────────────────────────────────────────────────────── */
+body.light {
+  --bg:        #f4f4f2;
+  --surface:   #ffffff;
+  --surface2:  #ebebeb;
+  --border:    rgba(0,0,0,0.08);
+  --red:       #d0021b;
+  --red-glow:  rgba(208,2,27,0.12);
+  --text:      #111111;
+  --muted:     #777;
+  --dim:       #bbb;
+}
+body.light .card { box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+body.light select option { background: #fff; color: #111; }
+body.light .modal { box-shadow: 0 32px 80px rgba(0,0,0,0.15); }
+
+/* ── Theme toggle button ─────────────────────────────────────────────────── */
+.btn-theme {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 16px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
+  flex-shrink: 0;
+}
+.btn-theme:hover { border-color: var(--red); color: var(--red); }
+
 html { scroll-behavior: smooth; }
 body {
   background: var(--bg);
@@ -503,9 +537,12 @@ select option:checked { background: #d0021b; color: #fff; }
         <span class="logo-eyebrow">Tech Watch</span>
         <h1 class="logo-title">Ma revue de presse tech</h1>
       </div>
-      <div class="tabs">
-        <button class="tab active" data-type="articles">Articles presse</button>
-        <button class="tab" data-type="videos">Vidéos YouTube</button>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="tabs">
+          <button class="tab active" data-type="articles">Articles presse</button>
+          <button class="tab" data-type="videos">Vidéos YouTube</button>
+        </div>
+        <button class="btn-theme" id="btn-theme" title="Changer le thème">🌙</button>
       </div>
     </div>
   </header>
@@ -790,6 +827,17 @@ searchEl.addEventListener('input', () => {
 sourceEl.addEventListener('change', () => { state.source = sourceEl.value; load(); });
 periodEl.addEventListener('change', () => { state.period = periodEl.value; load(); });
 refreshBtn.addEventListener('click', () => load(true));
+
+// ── Theme toggle ───────────────────────────────────────────────────────────
+const btnTheme = document.getElementById('btn-theme');
+const saved = localStorage.getItem('theme');
+if (saved === 'light') { document.body.classList.add('light'); btnTheme.textContent = '☀️'; }
+
+btnTheme.addEventListener('click', () => {
+  const isLight = document.body.classList.toggle('light');
+  btnTheme.textContent = isLight ? '☀️' : '🌙';
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+});
 
 // ── Init ───────────────────────────────────────────────────────────────────
 load();
