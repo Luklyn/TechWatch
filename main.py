@@ -30,11 +30,10 @@ RSS_FEEDS = {
     "TechPowerUp":    "https://www.techpowerup.com/rss/news",
     "Hardware & Co":  "https://hardwareand.co/actualites?format=feed&type=rss",
     "Hardware.fr":    "https://www.hardware.fr/backend/news.xml",
-    "Cowcotland":     "https://www.cowcotland.com/backend.php",
     "Tom's Hardware": "https://www.tomshardware.com/feeds/all",
     "01net":          "https://www.01net.com/actualites/feed",
     "The Verge":      "https://www.theverge.com/rss/index.xml",
-    "Ars Technica":   "https://feeds.arstechnica.com/arstechnica/index",
+    "Ars Technica":   "https://feeds.arstechnica.com/arstechnica/gadgets",
     "Digital Foundry": "https://www.digitalfoundry.net/feed",
 }
 
