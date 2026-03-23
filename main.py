@@ -8,11 +8,11 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from fastapi import FastAPI, Request, Query
 from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 from bs4 import BeautifulSoup
+from pathlib import Path
 
 app = FastAPI()
-templates = Jinja2Templates(directory="templates")
 
 # ─── HUGGING FACE CONFIG ─────────────────────────────────────────────────────
 # Le token est lu depuis le fichier .env (jamais dans le code)
@@ -124,8 +124,9 @@ def fetch_all(source_dict, is_youtube):
 # ─── ROUTES ──────────────────────────────────────────────────────────────────
 
 @app.get("/", response_class=HTMLResponse)
-async def index(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+async def index():
+    html = Path("templates/index.html").read_text(encoding="utf-8")
+    return HTMLResponse(content=html)
 
 
 @app.get("/api/feed")
