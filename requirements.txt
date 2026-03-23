@@ -1,8 +1,7 @@
-fastapi
-uvicorn[standard]
-feedparser
-requests
-jinja2
-httpx
-beautifulsoup4
-python-dotenv
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+feedparser>=6.0.0
+requests>=2.32.0
+jinja2>=3.1.5
+beautifulsoup4>=4.12.0
+python-dotenv>=1.0.0
