@@ -30,7 +30,7 @@ RSS_FEEDS = {
     "TechPowerUp":    "https://www.techpowerup.com/rss/news",
     "Hardware & Co":  "https://hardwareand.co/actualites?format=feed&type=rss",
     "Hardware.fr":    "https://www.hardware.fr/backend/news.xml",
-    "Frandroid":      "https://www.frandroid.com/feed",
+    "Frandroid":      "https://www.frandroid.com/produits-android/ordinateurs/feed",
     "Les Numériques": "https://www.lesnumeriques.com/informatique/rss.xml",
 }
 
