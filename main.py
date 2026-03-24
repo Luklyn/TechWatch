@@ -46,6 +46,7 @@ YOUTUBE_CHANNELS = {
     "Matt Lee":         "https://www.youtube.com/feeds/videos.xml?channel_id=UCGHzpEcSwfBQJAitgw2pgVQ",
     "Der8auer En" :     "https://www.youtube.com/feeds/videos.xml?channel_id=UCGsaijjOJshS2_ZmMNZgS-g",
     "Linus Tech Tips":  "https://www.youtube.com/feeds/videos.xml?channel_id=UCXuqSBlHAE6Xw-yeJA0Tunw",
+    "Boot Sequence":    "https://www.youtube.com/feeds/videos.xml?channel_id=UCac6UP9a9vR7tEkMjl4UHtg",
 }
 
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
