@@ -134,6 +134,7 @@ header {
 .tab:not(.active):hover { color: var(--text); background: var(--surface2); }
 
 /* ── Toolbar ─────────────────────────────────────────────────────────────── */
+/* ── Toolbar ─────────────────────────────────────────────────────────────── */
 .toolbar {
   display: flex;
   align-items: center;
@@ -184,6 +185,11 @@ select {
 }
 select option { background: #1c1c1c; }
 select option:checked { background: #d0021b; color: #fff; }
+
+.toolbar-selects {
+  display: contents; /* les selects s'intègrent directement dans la toolbar */
+}
+.toolbar-selects select { min-width: 0; flex: 1; }
 
 .btn-refresh {
   height: 40px;
@@ -264,7 +270,6 @@ select option:checked { background: #d0021b; color: #fff; }
   position: relative;
   transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
   animation: fadeUp 0.35s ease both;
-  cursor: pointer;
 }
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(14px); }
@@ -276,15 +281,12 @@ select option:checked { background: #d0021b; color: #fff; }
   box-shadow: 0 16px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(208,2,27,0.1);
 }
 
-/* Style pour les news déjà lues */
-.card.read {
-  opacity: 0.6;
-  filter: grayscale(0.5);
-  border-color: var(--border);
-}
-.card.read:hover {
-  opacity: 1;
-  filter: grayscale(0);
+/* Stretch link — full card clickable, pure CSS */
+.card-link {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: 12px;
 }
 
 .card-thumb {
@@ -519,11 +521,16 @@ select option:checked { background: #d0021b; color: #fff; }
   transition: all var(--transition);
 }
 .btn-close-modal:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+
+/* Make card clickable via button, not <a> */
+.card { cursor: pointer; }
+.card-link { display: none; } /* on cache le lien stretch, on gère via JS */
 </style>
 </head>
 <body>
 
 <div class="wrapper">
+  <!-- Header -->
   <header>
     <div class="header-inner">
       <div class="logo">
@@ -540,6 +547,7 @@ select option:checked { background: #d0021b; color: #fff; }
     </div>
   </header>
 
+  <!-- Toolbar -->
   <div class="toolbar">
     <div class="search-wrap">
       <span class="search-icon">🔍</span>
@@ -556,6 +564,7 @@ select option:checked { background: #d0021b; color: #fff; }
     </select>
   </div>
 
+  <!-- Meta -->
   <div class="meta-bar">
     <span class="count-badge" id="count">— résultats</span>
     <button class="btn-refresh" id="btn-refresh">
@@ -564,11 +573,14 @@ select option:checked { background: #d0021b; color: #fff; }
     <span class="last-update" id="last-update"></span>
   </div>
 
+  <!-- Errors -->
   <div id="errors"></div>
 
+  <!-- Grid -->
   <div class="grid" id="grid"></div>
 </div>
 
+<!-- Modal résumé IA -->
 <div class="modal-backdrop" id="modal-backdrop">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title-el">
     <div class="modal-header">
@@ -645,24 +657,21 @@ function escHtml(str) {
 }
 
 function proxyImg(url, isVideo) {
+  // Les thumbnails YouTube chargent directement sans problème de Referer
   if (isVideo || !url) return url;
   return '/api/img?url=' + encodeURIComponent(url);
 }
 
 function cardHTML(item, idx) {
-  // Détection des articles lus via localStorage
-  const readList = JSON.parse(localStorage.getItem('read_articles') || '[]');
-  const isRead = readList.includes(item.link) ? ' read' : '';
-
   const imgSrc = proxyImg(item.image, item.is_video);
   const thumb = imgSrc
     ? `<img class="card-thumb" src="${escHtml(imgSrc)}" alt="${escHtml(item.title)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\'card-thumb-placeholder\'>${item.is_video ? '▶' : '📰'}</div>'">`
     : `<div class="card-thumb-placeholder">${item.is_video ? '▶' : '📰'}</div>`;
   const summary = item.summary
     ? `<p class="card-summary">${escHtml(item.summary)}</p>` : '';
-
+  // data-* attributes drive the modal — no href needed on the card itself
   return `
-    <article class="card${isRead}" style="animation-delay:${idx * 35}ms"
+    <article class="card" style="animation-delay:${idx * 35}ms"
       data-url="${escHtml(item.link)}"
       data-title="${escHtml(item.title)}"
       data-source="${escHtml(item.source)}"
@@ -683,17 +692,6 @@ function cardHTML(item, idx) {
 
 // ── Modal ──────────────────────────────────────────────────────────────────
 function openModal(item) {
-  // Sauvegarde de l'article comme lu dans le localStorage
-  let readList = JSON.parse(localStorage.getItem('read_articles') || '[]');
-  if (!readList.includes(item.url)) {
-      readList.push(item.url);
-      localStorage.setItem('read_articles', JSON.stringify(readList));
-  }
-  
-  // Grise visuellement la carte immédiatement
-  const activeCard = document.querySelector(`.card[data-url="${item.url}"]`);
-  if (activeCard) activeCard.classList.add('read');
-
   // Populate header
   modalSource.textContent  = item.source;
   modalTitleEl.textContent = item.title;
