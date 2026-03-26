@@ -144,20 +144,12 @@ header {
 
 /* Tabs */
 .tabs {
-  display: none;
+  display: flex;
   gap: 4px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 4px;
-}
-@media (min-width: 768px) {
-  .tabs { display: flex; }
-}
-.tabs.mobile-visible {
-  display: flex;
-  width: 100%;
-  margin-bottom: 12px;
 }
 .tab {
   min-height: 44px;
@@ -706,6 +698,7 @@ select option:checked { background: #d0021b; color: #fff; }
 /* ── Responsive mobile ───────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .btn-filter-toggle { display: flex; }
+  .header-inner { gap: 12px; }
 }
 </style>
 </head>
@@ -721,10 +714,10 @@ select option:checked { background: #d0021b; color: #fff; }
         <span class="logo-eyebrow">Tech Watch</span>
         <h1 class="logo-title">Ma revue de presse tech</h1>
       </div>
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0;">
         <div class="tabs" id="main-tabs">
-          <button class="tab active" data-type="articles" aria-label="Afficher les articles presse">📰 Articles</button>
-          <button class="tab" data-type="videos" aria-label="Afficher les vidéos YouTube">🎬 Vidéos</button>
+          <button class="tab active" data-type="articles" aria-label="Afficher les articles presse">Articles presse</button>
+          <button class="tab" data-type="videos" aria-label="Afficher les vidéos YouTube">Vidéos YouTube</button>
         </div>
         <button class="btn-theme" id="btn-theme" aria-label="Basculer le thème clair/sombre (actuellement sombre)">🌙</button>
       </div>
