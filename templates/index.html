@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -26,7 +27,7 @@
   --font-sans:       'DM Sans', sans-serif;
   --font-serif:      'DM Serif Display', serif;
   --radius:          10px;
-  --transition:      220ms ease;
+  --transition:      250ms ease;
 }
 
 /* ── Design tokens — Light ───────────────────────────────────────────────── */
@@ -90,8 +91,16 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* ── Scrollbar personnalisée ─────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--dim); }
+
 /* ── Layout ──────────────────────────────────────────────────────────────── */
-.wrapper { max-width: 1400px; margin: 0 auto; padding: 0 32px; }
+.wrapper { max-width: 1400px; margin: 0 auto; padding: 0 16px; }
+@media (min-width: 768px) { .wrapper { padding: 0 24px; } }
+@media (min-width: 1024px) { .wrapper { padding: 0 32px; } }
 #main { outline: none; }
 
 /* ── Header sticky ───────────────────────────────────────────────────────── */
@@ -101,9 +110,12 @@ header {
   z-index: 50;
   background: var(--bg);
   border-bottom: 1px solid var(--border);
-  padding: 16px 0;
-  margin-bottom: 24px;
+  padding: 12px 0;
+  margin-bottom: 16px;
   backdrop-filter: blur(10px);
+}
+@media (min-width: 768px) {
+  header { padding: 16px 0; margin-bottom: 24px; }
 }
 .header-inner {
   display: flex;
@@ -122,19 +134,30 @@ header {
 }
 .logo-title {
   font-family: var(--font-serif);
-  font-size: 1.9rem;
+  font-size: 1.4rem;
   color: var(--text);
   line-height: 1.1;
+}
+@media (min-width: 768px) {
+  .logo-title { font-size: 1.9rem; }
 }
 
 /* Tabs */
 .tabs {
-  display: flex;
+  display: none;
   gap: 4px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 4px;
+}
+@media (min-width: 768px) {
+  .tabs { display: flex; }
+}
+.tabs.mobile-visible {
+  display: flex;
+  width: 100%;
+  margin-bottom: 12px;
 }
 .tab {
   min-height: 44px;
@@ -150,6 +173,7 @@ header {
   text-transform: uppercase;
   cursor: pointer;
   transition: all var(--transition);
+  flex: 1;
 }
 .tab.active  { background: var(--red); color: #fff; }
 .tab:not(.active):hover { color: var(--text); background: var(--surface2); }
@@ -161,18 +185,19 @@ header {
   border-radius: var(--radius);
   color: var(--muted);
   cursor: pointer;
-  font-size: 16px;
+  font-size: 18px;
   min-width: 44px; min-height: 44px;
   display: flex; align-items: center; justify-content: center;
   transition: all var(--transition);
   flex-shrink: 0;
 }
 .btn-theme:hover { border-color: var(--red); color: var(--red); }
+.btn-theme:focus-visible { outline: 2px solid #4a90d9; outline-offset: 2px; }
 
 /* ── Toolbar sticky ─────────────────────────────────────────────────────── */
 .toolbar-sticky {
   position: sticky;
-  top: 73px; /* hauteur du header */
+  top: 73px;
   z-index: 40;
   background: var(--bg);
   padding: 12px 0 0;
@@ -187,11 +212,11 @@ header {
   align-items: center;
   gap: 10px;
   margin-bottom: 0;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
 }
 .search-wrap {
   position: relative;
-  flex: 2;
+  flex: 1;
   min-width: 0;
 }
 .search-icon {
@@ -214,6 +239,7 @@ input[type="text"], select {
   transition: border-color var(--transition), box-shadow var(--transition);
   width: 100%;
   height: 44px;
+  min-height: 44px;
 }
 input[type="text"] { padding-left: 36px; }
 input[type="text"]:focus, select:focus {
@@ -235,6 +261,17 @@ select option:checked { background: #d0021b; color: #fff; }
 /* Mobile: filtres cachés par défaut */
 .toolbar-filters {
   display: contents;
+}
+@media (max-width: 768px) {
+  .toolbar-filters {
+    display: none;
+    contents: unset;
+    width: 100%;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .toolbar-filters.open { display: flex; }
+  .toolbar-filters select { width: 100%; }
 }
 
 /* ── Meta bar ────────────────────────────────────────────────────────────── */
@@ -276,6 +313,7 @@ select option:checked { background: #d0021b; color: #fff; }
   flex-shrink: 0;
 }
 .btn-refresh:hover { color: var(--red); border-color: var(--red); }
+.btn-refresh:focus-visible { outline: 2px solid #4a90d9; outline-offset: 2px; }
 .btn-refresh.spinning .refresh-icon { animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -303,22 +341,44 @@ select option:checked { background: #d0021b; color: #fff; }
 
 /* Error banner */
 .error-banner {
-  background: rgba(208,2,27,0.08);
-  border: 1px solid rgba(208,2,27,0.25);
+  background: rgba(208,2,27,0.1);
+  border: 1px solid rgba(208,2,27,0.3);
   border-radius: var(--radius);
-  padding: 10px 16px;
-  font-size: 12px;
-  color: #ff6b6b;
+  padding: 12px 16px;
+  font-size: 13px;
+  color: #ff7a7a;
   margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+/* ── Loading state ───────────────────────────────────────────────────────── */
+.loading-message {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--muted);
+}
+.loading-spinner {
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--surface2);
+  border-top-color: var(--red);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 16px;
 }
 
 /* ── Grid ────────────────────────────────────────────────────────────────── */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: 1fr;
   gap: 20px;
   padding-bottom: 80px;
   margin-top: 20px;
+}
+@media (min-width: 640px) {
+  .grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
 }
 
 /* ── Card ────────────────────────────────────────────────────────────────── */
@@ -333,22 +393,28 @@ select option:checked { background: #d0021b; color: #fff; }
   cursor: pointer;
   transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
   animation: fadeUp 0.35s ease both;
+  min-height: 44px;
 }
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.card:hover {
+.card:hover, .card:focus {
   border-color: rgba(208,2,27,0.6);
   transform: translateY(-4px);
   box-shadow: 0 16px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(208,2,27,0.1);
+  outline: none;
+}
+.card:focus-visible {
+  outline: 2px solid #4a90d9;
+  outline-offset: 2px;
 }
 .card-link { display: none; }
 
 /* Thumb */
 .card-thumb-wrap {
   width: 100%;
-  aspect-ratio: 16/9;
+  aspect-ratio: 16 / 9;
   overflow: hidden;
   background: var(--surface2);
   flex-shrink: 0;
@@ -414,14 +480,33 @@ select option:checked { background: #d0021b; color: #fff; }
   color: var(--dim);
   margin-left: auto;
 }
+.card-read-indicator {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 20px;
+  height: 20px;
+  background: rgba(208, 2, 27, 0.3);
+  border: 1px solid var(--red);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: var(--red);
+  opacity: 0;
+  transition: opacity var(--transition);
+  pointer-events: none;
+}
 
 /* Read state */
 .card.read {
-  opacity: 0.45;
-  filter: grayscale(30%);
+  opacity: 0.6;
+  filter: grayscale(35%);
   transition: opacity var(--transition), filter var(--transition), border-color var(--transition), transform var(--transition), box-shadow var(--transition);
 }
 .card.read:hover { opacity: 0.85; filter: grayscale(0%); }
+.card.read .card-read-indicator { opacity: 1; }
 
 /* ── Skeleton ────────────────────────────────────────────────────────────── */
 .skeleton {
@@ -458,11 +543,11 @@ select option:checked { background: #d0021b; color: #fff; }
   font-size: 1.4rem; color: var(--text);
   margin-bottom: 8px; font-weight: 400;
 }
-.state p { font-size: 13px; color: var(--text-secondary); }
+.state p { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
 .state .btn-reset {
   display: inline-block;
   margin-top: 16px;
-  padding: 8px 20px;
+  padding: 10px 20px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 20px;
@@ -471,8 +556,10 @@ select option:checked { background: #d0021b; color: #fff; }
   font-size: 12px;
   cursor: pointer;
   transition: all var(--transition);
+  min-height: 44px;
 }
 .state .btn-reset:hover { color: var(--red); border-color: var(--red); }
+.state .btn-reset:focus-visible { outline: 2px solid #4a90d9; outline-offset: 2px; }
 
 /* ── Back to top ─────────────────────────────────────────────────────────── */
 .btn-top {
@@ -491,9 +578,11 @@ select option:checked { background: #d0021b; color: #fff; }
   transform: translateY(10px);
   transition: opacity 0.25s ease, transform 0.25s ease;
   z-index: 90;
+  margin-bottom: 20px;
 }
 .btn-top.visible { opacity: 1; pointer-events: all; transform: translateY(0); }
 .btn-top:hover { background: #b00018; }
+.btn-top:focus-visible { outline: 2px solid #4a90d9; outline-offset: 2px; }
 
 /* ── Modal ───────────────────────────────────────────────────────────────── */
 .modal-backdrop {
@@ -578,6 +667,7 @@ select option:checked { background: #d0021b; color: #fff; }
   min-height: 44px;
 }
 .btn-original:hover { background: #b00018; transform: translateY(-1px); }
+.btn-original:focus-visible { outline: 2px solid #4a90d9; outline-offset: 2px; }
 .btn-close-modal {
   padding: 10px 16px; min-height: 44px;
   background: var(--surface2);
@@ -587,32 +677,9 @@ select option:checked { background: #d0021b; color: #fff; }
   cursor: pointer; transition: all var(--transition);
 }
 .btn-close-modal:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+.btn-close-modal:focus-visible { outline: 2px solid #4a90d9; outline-offset: 2px; }
 
-/* ── Responsive mobile ───────────────────────────────────────────────────── */
-@media (max-width: 640px) {
-  .wrapper { padding: 0 16px; }
-  .logo-title { font-size: 1.4rem; }
-  header { padding: 12px 0; margin-bottom: 16px; }
-  .tabs { display: none; }
-  .tabs.mobile-visible { display: flex; }
-
-  /* Filtres dans un toggle sur mobile */
-  .toolbar { flex-wrap: wrap; }
-  .toolbar-filters {
-    display: none;
-    contents: unset;
-    width: 100%;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .toolbar-filters.open { display: flex; }
-  .toolbar-filters select { width: 100%; }
-
-  .btn-filter-toggle {
-    display: flex !important;
-  }
-}
-
+/* ── Filter toggle button ───────────────────────────────────────────────── */
 .btn-filter-toggle {
   display: none;
   min-height: 44px;
@@ -626,13 +693,25 @@ select option:checked { background: #d0021b; color: #fff; }
   cursor: pointer;
   align-items: center; gap: 6px;
   flex-shrink: 0;
+  transition: all var(--transition);
 }
 .btn-filter-toggle:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+.btn-filter-toggle:focus-visible { outline: 2px solid #4a90d9; outline-offset: 2px; }
+.btn-filter-toggle.open .filter-chevron { transform: rotate(180deg); }
+.filter-chevron {
+  display: inline-block;
+  transition: transform var(--transition);
+}
+
+/* ── Responsive mobile ───────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .btn-filter-toggle { display: flex; }
+}
 </style>
 </head>
 <body>
 
-<a href="#main" class="skip-link">Aller au contenu</a>
+<a href="#main" class="skip-link">Aller au contenu principal</a>
 
 <div class="wrapper">
   <!-- Header sticky -->
@@ -644,10 +723,10 @@ select option:checked { background: #d0021b; color: #fff; }
       </div>
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
         <div class="tabs" id="main-tabs">
-          <button class="tab active" data-type="articles" aria-label="Afficher les articles presse">Articles presse</button>
-          <button class="tab" data-type="videos" aria-label="Afficher les vidéos YouTube">Vidéos YouTube</button>
+          <button class="tab active" data-type="articles" aria-label="Afficher les articles presse">📰 Articles</button>
+          <button class="tab" data-type="videos" aria-label="Afficher les vidéos YouTube">🎬 Vidéos</button>
         </div>
-        <button class="btn-theme" id="btn-theme" title="Changer le thème" aria-label="Basculer le thème clair/sombre">🌙</button>
+        <button class="btn-theme" id="btn-theme" aria-label="Basculer le thème clair/sombre (actuellement sombre)">🌙</button>
       </div>
     </div>
   </header>
@@ -655,43 +734,42 @@ select option:checked { background: #d0021b; color: #fff; }
   <main id="main" tabindex="-1">
     <!-- Toolbar sticky -->
     <div class="toolbar-sticky">
-    <div class="toolbar" role="search">
-      <div class="search-wrap">
-        <span class="search-icon" aria-hidden="true">🔍</span>
-        <label for="search" class="sr-only">Rechercher un article</label>
-        <input type="text" id="search" placeholder="Rechercher…" autocomplete="off" aria-label="Rechercher un article">
+      <div class="toolbar" role="search">
+        <div class="search-wrap">
+          <span class="search-icon" aria-hidden="true">🔍</span>
+          <label for="search" class="sr-only">Rechercher un article (minimum 2 caractères)</label>
+          <input type="text" id="search" placeholder="Rechercher…" autocomplete="off" aria-label="Rechercher un article">
+        </div>
+        <div class="toolbar-filters" id="toolbar-filters">
+          <label for="filter-source" class="sr-only">Filtrer par source</label>
+          <select id="filter-source" aria-label="Filtrer par source">
+            <option value="">Toutes les sources</option>
+          </select>
+          <label for="filter-period" class="sr-only">Filtrer par période</label>
+          <select id="filter-period" aria-label="Filtrer par période">
+            <option value="">Toutes les dates</option>
+            <option value="today">Aujourd'hui</option>
+            <option value="week">Cette semaine</option>
+            <option value="month">Ce mois</option>
+          </select>
+        </div>
+        <button class="btn-filter-toggle" id="btn-filter-toggle" aria-expanded="false" aria-controls="toolbar-filters">
+          <span class="filter-chevron">▼</span> Filtres
+        </button>
       </div>
-      <div class="toolbar-filters" id="toolbar-filters">
-        <label for="filter-source" class="sr-only">Filtrer par source</label>
-        <select id="filter-source" aria-label="Filtrer par source">
-          <option value="">Toutes les sources</option>
-        </select>
-        <label for="filter-period" class="sr-only">Filtrer par période</label>
-        <select id="filter-period" aria-label="Filtrer par période">
-          <option value="">Toutes les dates</option>
-          <option value="today">Aujourd'hui</option>
-          <option value="week">Cette semaine</option>
-          <option value="month">Ce mois</option>
-        </select>
+
+      <!-- Meta -->
+      <div class="meta-bar">
+        <span class="count-badge" id="count" aria-live="polite">Chargement…</span>
+        <button class="btn-refresh" id="btn-refresh" aria-label="Actualiser les flux (Ctrl+R)">
+          <span class="refresh-icon" aria-hidden="true">↻</span> <span class="refresh-text">Actualiser</span>
+        </button>
+        <span class="last-update" id="last-update" aria-live="polite"></span>
       </div>
-      <button class="btn-filter-toggle" id="btn-filter-toggle" aria-expanded="false" aria-controls="toolbar-filters">
-        ⚙ Filtres
-      </button>
-    </div>
-
-    <!-- Meta -->
-    <div class="meta-bar">
-      <span class="count-badge" id="count" aria-live="polite">— résultats</span>
-      <button class="btn-refresh" id="btn-refresh" title="Actualiser les flux" aria-label="Actualiser les flux">
-        <span class="refresh-icon" aria-hidden="true">↻</span> Actualiser
-      </button>
-      <span class="last-update" id="last-update" aria-live="polite"></span>
-    </div>
-
     </div><!-- /toolbar-sticky -->
 
     <!-- Errors -->
-    <div id="errors" role="alert"></div>
+    <div id="errors" role="alert" aria-live="assertive"></div>
 
     <!-- Grid -->
     <div class="grid" id="grid" role="list" aria-label="Articles"></div>
@@ -705,7 +783,7 @@ select option:checked { background: #d0021b; color: #fff; }
 <button class="btn-top" id="btn-top" aria-label="Retour en haut de page">↑</button>
 
 <!-- Toast -->
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
 <!-- Modal résumé IA -->
 <div class="modal-backdrop" id="modal-backdrop">
@@ -735,9 +813,11 @@ select option:checked { background: #d0021b; color: #fff; }
 // ── State ──────────────────────────────────────────────────────────────────
 const state = { type: 'articles', search: '', source: '', period: '' };
 let debounceTimer = null;
-let allItems      = [];   // tous les items chargés
-let displayedCount = 0;   // combien sont affichés
-const PAGE_SIZE    = 20;  // items par page (infinite scroll)
+let allItems      = [];
+let displayedCount = 0;
+const PAGE_SIZE    = 20;
+let loadTimeout    = null;
+const LOAD_TIMEOUT_MS = 5000; // 5 secondes max
 
 // ── DOM refs ───────────────────────────────────────────────────────────────
 const grid          = document.getElementById('grid');
@@ -804,7 +884,7 @@ function skeletons(n = PAGE_SIZE) {
 function cardHTML(item, idx) {
   const imgSrc = proxyImg(item.image, item.is_video);
   const thumb  = imgSrc
-    ? `<img class="card-thumb" src="${escHtml(imgSrc)}" alt="${escHtml(item.title)}" width="400" height="225" loading="lazy" onerror="this.closest('.card-thumb-wrap').innerHTML='<div class=\\'card-thumb-placeholder\\'>${item.is_video ? '&#9654;' : '&#128240;'}</div>'">`
+    ? `<img class="card-thumb" src="${escHtml(imgSrc)}" alt="${escHtml(item.title)}" loading="lazy" onerror="this.closest('.card-thumb-wrap').innerHTML='<div class=\\'card-thumb-placeholder\\'>${item.is_video ? '▶' : '📰'}</div>'"/>`
     : `<div class="card-thumb-placeholder">${item.is_video ? '▶' : '📰'}</div>`;
   const summary = item.summary
     ? `<p class="card-summary">${escHtml(item.summary)}</p>` : '';
@@ -819,6 +899,7 @@ function cardHTML(item, idx) {
       tabindex="0"
       aria-label="${escHtml(item.title)}">
       <div class="card-thumb-wrap">${thumb}</div>
+      <div class="card-read-indicator">✓</div>
       <div class="card-body">
         <span class="card-source">${escHtml(item.source)}</span>
         <h2 class="card-title">${escHtml(item.title)}</h2>
@@ -873,16 +954,20 @@ const observer = new IntersectionObserver(entries => {
 }, { rootMargin: '300px' });
 observer.observe(sentinel);
 
-// ── Modal ──────────────────────────────────────────────────────────────────
+// ── Modal avec gestion du focus ────────────────────────────────────────────
+let previouslyFocused = null;
+
 function openModal(item) {
+  previouslyFocused = document.activeElement;
+  
   modalSource.textContent = item.source;
   modalTitleEl.textContent = item.title;
   modalMeta.textContent   = `📅 ${item.date}`;
   modalLink.href          = item.url;
   modalLink.setAttribute('rel', 'noopener noreferrer');
   modalLink.innerHTML     = item.is_video
-    ? '&#9654; Voir la vidéo sur YouTube'
-    : '&#8599; Lire l\'article original';
+    ? '▶ Voir la vidéo sur YouTube'
+    : '↗ Lire l\'article original';
 
   modalSummary.textContent = 'Analyse en cours…';
   modalSummary.classList.add('loading');
@@ -890,6 +975,12 @@ function openModal(item) {
 
   backdrop.classList.add('open');
   document.body.style.overflow = 'hidden';
+  
+  // Focus le lien principal
+  setTimeout(() => modalLink.focus(), 250);
+
+  // Limiter la tabulation au modal
+  backdrop.addEventListener('keydown', handleModalKeydown);
 
   fetch('/api/summarize', {
     method: 'POST',
@@ -909,9 +1000,37 @@ function openModal(item) {
   });
 }
 
+function handleModalKeydown(e) {
+  if (e.key === 'Tab') {
+    const focusableElements = backdrop.querySelectorAll(
+      'a, button, [tabindex]:not([tabindex="-1"])'
+    );
+    const firstEl = focusableElements[0];
+    const lastEl = focusableElements[focusableElements.length - 1];
+
+    if (e.shiftKey) {
+      if (document.activeElement === firstEl) {
+        lastEl.focus();
+        e.preventDefault();
+      }
+    } else {
+      if (document.activeElement === lastEl) {
+        firstEl.focus();
+        e.preventDefault();
+      }
+    }
+  }
+}
+
 function closeModal() {
   backdrop.classList.remove('open');
   document.body.style.overflow = '';
+  backdrop.removeEventListener('keydown', handleModalKeydown);
+  
+  // Restaurer le focus
+  if (previouslyFocused) {
+    previouslyFocused.focus();
+  }
 }
 
 // Delegate card clicks + keyboard
@@ -926,10 +1045,12 @@ function handleCardActivation(card) {
     is_video: card.dataset.isVideo === '1',
   });
 }
+
 grid.addEventListener('click', e => {
   const card = e.target.closest('.card');
   if (card) handleCardActivation(card);
 });
+
 grid.addEventListener('keydown', e => {
   if (e.key === 'Enter' || e.key === ' ') {
     const card = e.target.closest('.card');
@@ -946,7 +1067,8 @@ async function load(forceRefresh = false) {
   if (forceRefresh) {
     refreshBtn.classList.add('spinning');
   }
-  grid.innerHTML = skeletons();
+  
+  grid.innerHTML = skeletons(3);
   errorsEl.innerHTML = '';
   allItems = [];
   displayedCount = 0;
@@ -957,9 +1079,23 @@ async function load(forceRefresh = false) {
     refresh: forceRefresh ? '1' : '0',
   });
 
+  // Timeout après 5 secondes
+  loadTimeout = setTimeout(() => {
+    grid.innerHTML = `
+      <div class="state">
+        <div class="state-icon">⏱</div>
+        <h3>Chargement trop long</h3>
+        <p>Le serveur met du temps à répondre. Veuillez réessayer.</p>
+        <button class="btn-reset" onclick="location.reload()">Recharger la page</button>
+      </div>`;
+    refreshBtn.classList.remove('spinning');
+  }, LOAD_TIMEOUT_MS);
+
   try {
     const res  = await fetch(`/api/feed?${params}`);
     const data = await res.json();
+    
+    clearTimeout(loadTimeout);
 
     sourceEl.innerHTML = '<option value="">Toutes les sources</option>' +
       data.sources.map(s =>
@@ -997,11 +1133,13 @@ async function load(forceRefresh = false) {
       loadMore();
     }
   } catch (err) {
+    clearTimeout(loadTimeout);
     grid.innerHTML = `
       <div class="state">
         <div class="state-icon">📡</div>
         <h3>Erreur de connexion</h3>
         <p>Impossible de joindre le serveur.</p>
+        <button class="btn-reset" onclick="location.reload()">Recharger la page</button>
       </div>`;
   } finally {
     refreshBtn.classList.remove('spinning');
@@ -1010,13 +1148,14 @@ async function load(forceRefresh = false) {
 
 // ── Back to top ────────────────────────────────────────────────────────────
 window.addEventListener('scroll', () => {
-  btnTop.classList.toggle('visible', window.scrollY > 400);
+  btnTop.classList.toggle('visible', window.scrollY > 200);
 }, { passive: true });
 btnTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
 // ── Mobile filter toggle ───────────────────────────────────────────────────
 btnFilterToggle.addEventListener('click', () => {
   const open = toolbarFilters.classList.toggle('open');
+  btnFilterToggle.classList.toggle('open', open);
   btnFilterToggle.setAttribute('aria-expanded', open);
 });
 
@@ -1030,10 +1169,19 @@ document.querySelectorAll('.tab').forEach(btn => {
     load();
   });
 });
+
 searchEl.addEventListener('input', () => {
   clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(() => { state.search = searchEl.value.trim(); load(); }, 380);
+  debounceTimer = setTimeout(() => {
+    const value = searchEl.value.trim();
+    // Minimum 2 caractères pour valider une recherche
+    if (value.length === 0 || value.length >= 2) {
+      state.search = value;
+      load();
+    }
+  }, 500);
 });
+
 sourceEl.addEventListener('change', () => { state.source = sourceEl.value; load(); });
 periodEl.addEventListener('change', () => { state.period = periodEl.value; load(); });
 refreshBtn.addEventListener('click', () => load(true));
@@ -1041,10 +1189,15 @@ refreshBtn.addEventListener('click', () => load(true));
 // ── Theme toggle ───────────────────────────────────────────────────────────
 const btnTheme = document.getElementById('btn-theme');
 const saved    = localStorage.getItem('theme');
-if (saved === 'light') { document.body.classList.add('light'); btnTheme.textContent = '☀️'; }
+if (saved === 'light') { 
+  document.body.classList.add('light'); 
+  btnTheme.textContent = '☀️';
+  btnTheme.setAttribute('aria-label', 'Basculer le thème clair/sombre (actuellement clair)');
+}
 btnTheme.addEventListener('click', () => {
   const isLight = document.body.classList.toggle('light');
   btnTheme.textContent = isLight ? '☀️' : '🌙';
+  btnTheme.setAttribute('aria-label', `Basculer le thème clair/sombre (actuellement ${isLight ? 'clair' : 'sombre'})`);
   localStorage.setItem('theme', isLight ? 'light' : 'dark');
 });
 
