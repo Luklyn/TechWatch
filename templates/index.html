@@ -28,6 +28,8 @@
   --font-serif:      'DM Serif Display', serif;
   --radius:          10px;
   --transition:      250ms ease;
+  /* Transition progressive pour le changement de thème */
+  --theme-transition: 1.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ── Design tokens — Light ───────────────────────────────────────────────── */
@@ -89,12 +91,14 @@ body {
   font-family: var(--font-sans);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+  /* Transition progressive sur tous les éléments */
+  transition: background-color var(--theme-transition), color var(--theme-transition);
 }
 
 /* ── Scrollbar personnalisée ─────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); transition: background-color var(--theme-transition); }
+::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 4px; transition: background-color var(--theme-transition); }
 ::-webkit-scrollbar-thumb:hover { background: var(--dim); }
 
 /* ── Layout ──────────────────────────────────────────────────────────────── */
@@ -113,6 +117,7 @@ header {
   padding: 12px 0;
   margin-bottom: 16px;
   backdrop-filter: blur(10px);
+  transition: background-color var(--theme-transition), border-color var(--theme-transition);
 }
 @media (min-width: 768px) {
   header { padding: 16px 0; margin-bottom: 24px; }
@@ -137,6 +142,7 @@ header {
   font-size: 1.4rem;
   color: var(--text);
   line-height: 1.1;
+  transition: color var(--theme-transition);
 }
 @media (min-width: 768px) {
   .logo-title { font-size: 1.9rem; }
@@ -150,6 +156,7 @@ header {
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 4px;
+  transition: background-color var(--theme-transition), border-color var(--theme-transition);
 }
 .tab {
   min-height: 44px;
@@ -164,7 +171,7 @@ header {
   letter-spacing: 0.8px;
   text-transform: uppercase;
   cursor: pointer;
-  transition: all var(--transition);
+  transition: all var(--theme-transition);
   flex: 1;
 }
 .tab.active  { background: var(--red); color: #fff; }
@@ -180,11 +187,16 @@ header {
   font-size: 18px;
   min-width: 44px; min-height: 44px;
   display: flex; align-items: center; justify-content: center;
-  transition: all var(--transition);
+  transition: all var(--theme-transition);
   flex-shrink: 0;
 }
 .btn-theme:hover { border-color: var(--red); color: var(--red); }
 .btn-theme:focus-visible { outline: 2px solid #4a90d9; outline-offset: 2px; }
+.btn-theme.rotating { animation: sunRotate 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+@keyframes sunRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 
 /* ── Toolbar sticky ─────────────────────────────────────────────────────── */
 .toolbar-sticky {
@@ -196,6 +208,7 @@ header {
   margin-bottom: 0;
   border-bottom: 1px solid var(--border);
   backdrop-filter: blur(10px);
+  transition: background-color var(--theme-transition), border-color var(--theme-transition);
 }
 
 /* ── Toolbar ─────────────────────────────────────────────────────────────── */
@@ -218,6 +231,7 @@ header {
   color: var(--muted);
   font-size: 13px;
   pointer-events: none;
+  transition: color var(--theme-transition);
 }
 input[type="text"], select {
   background: var(--surface);
@@ -228,7 +242,7 @@ input[type="text"], select {
   font-size: 13px;
   padding: 0 14px;
   outline: none;
-  transition: border-color var(--transition), box-shadow var(--transition);
+  transition: background-color var(--theme-transition), color var(--theme-transition), border-color var(--theme-transition), box-shadow var(--theme-transition);
   width: 100%;
   height: 44px;
   min-height: 44px;
@@ -284,8 +298,9 @@ select option:checked { background: #d0021b; color: #fff; }
   border-radius: 20px;
   padding: 3px 12px;
   letter-spacing: 0.3px;
+  transition: background-color var(--theme-transition), color var(--theme-transition), border-color var(--theme-transition);
 }
-.last-update { font-size: 11px; color: var(--dim); margin-left: auto; }
+.last-update { font-size: 11px; color: var(--dim); margin-left: auto; transition: color var(--theme-transition); }
 
 /* Refresh button */
 .btn-refresh {
@@ -299,7 +314,7 @@ select option:checked { background: #d0021b; color: #fff; }
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  transition: all var(--transition);
+  transition: all var(--theme-transition);
   white-space: nowrap;
   display: flex; align-items: center; gap: 6px;
   flex-shrink: 0;
@@ -326,7 +341,7 @@ select option:checked { background: #d0021b; color: #fff; }
   box-shadow: 0 8px 24px rgba(0,0,0,0.3);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition: opacity 0.3s ease, transform 0.3s ease, background-color var(--theme-transition), color var(--theme-transition), border-color var(--theme-transition);
   z-index: 200;
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -341,6 +356,7 @@ select option:checked { background: #d0021b; color: #fff; }
   color: #ff7a7a;
   margin-bottom: 12px;
   line-height: 1.4;
+  transition: background-color var(--theme-transition), color var(--theme-transition), border-color var(--theme-transition);
 }
 
 /* ── Loading state ───────────────────────────────────────────────────────── */
@@ -383,7 +399,7 @@ select option:checked { background: #d0021b; color: #fff; }
   flex-direction: column;
   position: relative;
   cursor: pointer;
-  transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+  transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition), background-color var(--theme-transition);
   animation: fadeUp 0.35s ease both;
   min-height: 44px;
 }
@@ -410,6 +426,7 @@ select option:checked { background: #d0021b; color: #fff; }
   overflow: hidden;
   background: var(--surface2);
   flex-shrink: 0;
+  transition: background-color var(--theme-transition);
 }
 .card-thumb {
   width: 100%;
@@ -425,6 +442,7 @@ select option:checked { background: #d0021b; color: #fff; }
   background: linear-gradient(135deg, var(--surface2) 0%, #252525 100%);
   display: flex; align-items: center; justify-content: center;
   font-size: 36px; opacity: 0.35;
+  transition: background-color var(--theme-transition);
 }
 
 /* Body */
@@ -446,6 +464,7 @@ select option:checked { background: #d0021b; color: #fff; }
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  transition: color var(--theme-transition);
 }
 .card-summary {
   font-size: 12px;
@@ -456,21 +475,25 @@ select option:checked { background: #d0021b; color: #fff; }
   -webkit-box-orient: vertical;
   overflow: hidden;
   flex: 1;
+  transition: color var(--theme-transition);
 }
 .card-footer {
   display: flex; align-items: center;
   border-top: 1px solid var(--border);
   padding-top: 10px; margin-top: 4px;
+  transition: border-color var(--theme-transition);
 }
 .card-date {
   font-size: 13px;
   color: var(--text-secondary);
   letter-spacing: 0.2px;
+  transition: color var(--theme-transition);
 }
 .card-ai-badge {
   font-size: 10px;
   color: var(--dim);
   margin-left: auto;
+  transition: color var(--theme-transition);
 }
 .card-read-indicator {
   position: absolute;
@@ -495,7 +518,7 @@ select option:checked { background: #d0021b; color: #fff; }
 .card.read {
   opacity: 0.6;
   filter: grayscale(35%);
-  transition: opacity var(--transition), filter var(--transition), border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+  transition: opacity var(--transition), filter var(--transition), border-color var(--transition), transform var(--transition), box-shadow var(--transition), background-color var(--theme-transition);
 }
 .card.read:hover { opacity: 0.85; filter: grayscale(0%); }
 .card.read .card-read-indicator { opacity: 1; }
@@ -513,6 +536,7 @@ select option:checked { background: #d0021b; color: #fff; }
   border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
+  transition: background-color var(--theme-transition), border-color var(--theme-transition);
 }
 .sk-img  { aspect-ratio: 16/9; width: 100%; border-radius: 0; }
 .sk-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
@@ -534,8 +558,9 @@ select option:checked { background: #d0021b; color: #fff; }
   font-family: var(--font-serif);
   font-size: 1.4rem; color: var(--text);
   margin-bottom: 8px; font-weight: 400;
+  transition: color var(--theme-transition);
 }
-.state p { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+.state p { font-size: 13px; color: var(--text-secondary); line-height: 1.5; transition: color var(--theme-transition); }
 .state .btn-reset {
   display: inline-block;
   margin-top: 16px;
@@ -547,7 +572,7 @@ select option:checked { background: #d0021b; color: #fff; }
   font-family: var(--font-sans);
   font-size: 12px;
   cursor: pointer;
-  transition: all var(--transition);
+  transition: all var(--theme-transition);
   min-height: 44px;
 }
 .state .btn-reset:hover { color: var(--red); border-color: var(--red); }
@@ -568,7 +593,7 @@ select option:checked { background: #d0021b; color: #fff; }
   box-shadow: 0 4px 16px rgba(208,2,27,0.4);
   opacity: 0; pointer-events: none;
   transform: translateY(10px);
-  transition: opacity 0.25s ease, transform 0.25s ease;
+  transition: opacity 0.25s ease, transform 0.25s ease, background-color var(--theme-transition), box-shadow var(--theme-transition);
   z-index: 90;
   margin-bottom: 20px;
 }
@@ -596,7 +621,7 @@ select option:checked { background: #d0021b; color: #fff; }
   overflow-y: auto;
   display: flex; flex-direction: column;
   transform: translateY(20px) scale(0.97);
-  transition: transform 0.25s ease;
+  transition: transform 0.25s ease, background-color var(--theme-transition), border-color var(--theme-transition);
   box-shadow: 0 32px 80px rgba(0,0,0,0.7);
 }
 .modal-backdrop.open .modal { transform: translateY(0) scale(1); }
@@ -608,6 +633,7 @@ select option:checked { background: #d0021b; color: #fff; }
   background: var(--surface);
   border-radius: 16px 16px 0 0;
   z-index: 1;
+  transition: background-color var(--theme-transition), border-color var(--theme-transition);
 }
 .modal-source {
   font-size: 10px; font-weight: 700;
@@ -618,14 +644,16 @@ select option:checked { background: #d0021b; color: #fff; }
   font-family: var(--font-serif);
   font-size: 1.25rem; color: var(--text);
   line-height: 1.4; font-weight: 400;
+  transition: color var(--theme-transition);
 }
-.modal-meta { font-size: 11px; color: var(--muted); }
+.modal-meta { font-size: 11px; color: var(--muted); transition: color var(--theme-transition); }
 .modal-body { padding: 24px; flex: 1; }
 .modal-ai-label {
   display: flex; align-items: center; gap: 8px;
   font-size: 10px; font-weight: 700;
   letter-spacing: 1px; text-transform: uppercase;
   color: var(--muted); margin-bottom: 14px;
+  transition: color var(--theme-transition);
 }
 .modal-ai-dot {
   width: 6px; height: 6px;
@@ -639,6 +667,7 @@ select option:checked { background: #d0021b; color: #fff; }
 .modal-summary {
   font-size: 14.5px; line-height: 1.75;
   color: var(--text-secondary); min-height: 80px;
+  transition: color var(--theme-transition);
 }
 .modal-summary.loading { color: var(--muted); font-style: italic; }
 .modal-footer {
@@ -647,6 +676,7 @@ select option:checked { background: #d0021b; color: #fff; }
   display: flex; align-items: center;
   justify-content: space-between;
   gap: 12px; flex-wrap: wrap;
+  transition: border-color var(--theme-transition);
 }
 .btn-original {
   display: inline-flex; align-items: center; gap: 8px;
@@ -666,7 +696,7 @@ select option:checked { background: #d0021b; color: #fff; }
   border: 1px solid var(--border);
   border-radius: 8px; color: var(--muted);
   font-family: var(--font-sans); font-size: 13px;
-  cursor: pointer; transition: all var(--transition);
+  cursor: pointer; transition: all var(--theme-transition);
 }
 .btn-close-modal:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
 .btn-close-modal:focus-visible { outline: 2px solid #4a90d9; outline-offset: 2px; }
@@ -685,7 +715,7 @@ select option:checked { background: #d0021b; color: #fff; }
   cursor: pointer;
   align-items: center; gap: 6px;
   flex-shrink: 0;
-  transition: all var(--transition);
+  transition: all var(--theme-transition);
 }
 .btn-filter-toggle:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
 .btn-filter-toggle:focus-visible { outline: 2px solid #4a90d9; outline-offset: 2px; }
@@ -1179,7 +1209,7 @@ sourceEl.addEventListener('change', () => { state.source = sourceEl.value; load(
 periodEl.addEventListener('change', () => { state.period = periodEl.value; load(); });
 refreshBtn.addEventListener('click', () => load(true));
 
-// ── Theme toggle ───────────────────────────────────────────────────────────
+// ── Theme toggle avec animation progressive ────────────────────────────────
 const btnTheme = document.getElementById('btn-theme');
 const saved    = localStorage.getItem('theme');
 if (saved === 'light') { 
@@ -1188,10 +1218,16 @@ if (saved === 'light') {
   btnTheme.setAttribute('aria-label', 'Basculer le thème clair/sombre (actuellement clair)');
 }
 btnTheme.addEventListener('click', () => {
+  // Ajouter l'animation de rotation
+  btnTheme.classList.add('rotating');
+  
   const isLight = document.body.classList.toggle('light');
   btnTheme.textContent = isLight ? '☀️' : '🌙';
   btnTheme.setAttribute('aria-label', `Basculer le thème clair/sombre (actuellement ${isLight ? 'clair' : 'sombre'})`);
   localStorage.setItem('theme', isLight ? 'light' : 'dark');
+  
+  // Retirer la classe d'animation après qu'elle soit terminée
+  setTimeout(() => btnTheme.classList.remove('rotating'), 1200);
 });
 
 // ── Init ───────────────────────────────────────────────────────────────────
