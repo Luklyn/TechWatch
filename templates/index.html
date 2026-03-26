@@ -169,6 +169,18 @@ header {
 }
 .btn-theme:hover { border-color: var(--red); color: var(--red); }
 
+/* ── Toolbar sticky ─────────────────────────────────────────────────────── */
+.toolbar-sticky {
+  position: sticky;
+  top: 73px; /* hauteur du header */
+  z-index: 40;
+  background: var(--bg);
+  padding: 12px 0 0;
+  margin-bottom: 0;
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(10px);
+}
+
 /* ── Toolbar ─────────────────────────────────────────────────────────────── */
 .toolbar {
   display: flex;
@@ -230,9 +242,8 @@ select option:checked { background: #d0021b; color: #fff; }
   display: flex;
   align-items: center;
   gap: 12px;
-  margin: 16px 0 20px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--border);
+  margin: 12px 0 0;
+  padding-bottom: 12px;
   flex-wrap: wrap;
 }
 .count-badge {
@@ -307,6 +318,7 @@ select option:checked { background: #d0021b; color: #fff; }
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 20px;
   padding-bottom: 80px;
+  margin-top: 20px;
 }
 
 /* ── Card ────────────────────────────────────────────────────────────────── */
@@ -641,7 +653,8 @@ select option:checked { background: #d0021b; color: #fff; }
   </header>
 
   <main id="main" tabindex="-1">
-    <!-- Toolbar -->
+    <!-- Toolbar sticky -->
+    <div class="toolbar-sticky">
     <div class="toolbar" role="search">
       <div class="search-wrap">
         <span class="search-icon" aria-hidden="true">🔍</span>
@@ -674,6 +687,8 @@ select option:checked { background: #d0021b; color: #fff; }
       </button>
       <span class="last-update" id="last-update" aria-live="polite"></span>
     </div>
+
+    </div><!-- /toolbar-sticky -->
 
     <!-- Errors -->
     <div id="errors" role="alert"></div>
