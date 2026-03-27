@@ -72,8 +72,6 @@ def fetch_one(name, url, is_youtube):
         for entry in feed.entries:
             try:
                 dt = datetime(*entry.published_parsed[:6])
-                if is_youtube and '/shorts/' in getattr(entry, 'link', ''):
-                    continue  # Ignorer les Shorts YouTube
                 if is_youtube:
                     v_id = (
                         entry.link.split("v=")[1].split("&")[0]
