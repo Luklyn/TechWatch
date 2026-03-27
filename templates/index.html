@@ -1022,9 +1022,7 @@ function speakText(text) {
 
   const utterance = new SpeechSynthesisUtterance(text);
   // Détecter la langue selon la source affichée dans la modale
-  const frSources = ['hardware.fr','hardware & co','les numériques','frandroid','cowcotland','01net'];
-  const srcText = (modalSource.textContent || '').toLowerCase();
-  utterance.lang = frSources.some(s => srcText.includes(s)) ? 'fr-FR';
+  utterance.lang = 'fr-FR';
   utterance.rate = 1;
   utterance.pitch = 1;
   utterance.volume = 1;
