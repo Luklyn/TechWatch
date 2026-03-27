@@ -1,305 +1,1516 @@
-import os
-import re
-import time
-import feedparser
-import requests
-from datetime import datetime
-from concurrent.futures import ThreadPoolExecutor, as_completed
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Revue de presse tech : agrégateur d'actualités technologiques avec résumés IA">
+<title>Ma revue de presse tech</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ── Reset ───────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-from fastapi import FastAPI, Request, Query
-from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
-from bs4 import BeautifulSoup
-from pathlib import Path
-
-app = FastAPI()
-
-# ─── HUGGING FACE CONFIG ─────────────────────────────────────────────────────
-# Le token est lu depuis le fichier .env (jamais dans le code)
-from dotenv import load_dotenv
-load_dotenv()
-HF_TOKEN = os.getenv("HF_TOKEN")
-if not HF_TOKEN:
-    raise RuntimeError("HF_TOKEN manquant — créez un fichier .env avec HF_TOKEN=hf_xxx")
-HF_MODEL = "meta-llama/Llama-3.1-8B-Instruct"
-HF_URL   = "https://router.huggingface.co/v1/chat/completions"
-
-# ─── SOURCES ─────────────────────────────────────────────────────────────────
-
-RSS_FEEDS = {
-    "TechPowerUp":    "https://www.techpowerup.com/rss/news",
-    "Hardware & Co":  "https://hardwareand.co/actualites?format=feed&type=rss",
-    "Hardware.fr":    "https://www.hardware.fr/backend/news.xml",
-    "Les Numériques": "https://www.lesnumeriques.com/informatique/rss.xml",
+/* ── Design tokens — Dark (défaut) ──────────────────────────────────────── */
+:root {
+  --bg:              #121212;
+  --surface:         #1e1e1e;
+  --surface2:        #2a2a2a;
+  --border:          rgba(255,255,255,0.07);
+  --red:             #d0021b;
+  --red-glow:        rgba(208,2,27,0.18);
+  --text:            #e8e8e8;
+  --text-secondary:  #aaaaaa;
+  --muted:           #666;
+  --dim:             #3a3a3a;
+  --font-sans:       'DM Sans', sans-serif;
+  --font-serif:      'DM Serif Display', serif;
+  --radius:          10px;
+  --transition:      250ms ease;
+  --theme-transition: 1.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* ── Design tokens — Light ───────────────────────────────────────────────── */
+body.light {
+  --bg:              #f4f4f2;
+  --surface:         #ffffff;
+  --surface2:        #ebebeb;
+  --border:          rgba(0,0,0,0.08);
+  --red:             #d0021b;
+  --red-glow:        rgba(208,2,27,0.12);
+  --text:            #111111;
+  --text-secondary:  #666666;
+  --muted:           #777;
+  --dim:             #bbb;
+}
+body.light .card          { box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+body.light select option  { background: #fff; color: #111; }
+body.light .modal         { box-shadow: 0 32px 80px rgba(0,0,0,0.15); }
+body.light .card-thumb-placeholder { background: linear-gradient(135deg, #e0e0e0, #d0d0d0); opacity: 0.7; }
 
-YOUTUBE_CHANNELS = {
-    "Gamers Nexus":     "https://www.youtube.com/feeds/videos.xml?channel_id=UChIs72whgZI9w6d6FhwGGHA",
-    "VCG":              "https://www.youtube.com/feeds/videos.xml?channel_id=UCjrj3gdo-KL2S_JN_gdNyPw",
-    "Hardware Canucks": "https://www.youtube.com/feeds/videos.xml?channel_id=UCTzLRZUgelatKZ4nyIKcAbg",
-    "Hardware Unboxed": "https://www.youtube.com/feeds/videos.xml?channel_id=UCI8iQa1hv7oV_Z8D35vVuSg",
-    "Matt Lee":         "https://www.youtube.com/feeds/videos.xml?channel_id=UCGHzpEcSwfBQJAitgw2pgVQ",
+/* ── Skip link (accessibilité) ───────────────────────────────────────────── */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 16px;
+  background: var(--red);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 700;
+  z-index: 9999;
+  transition: top 0.2s;
+}
+.skip-link:focus { top: 16px; }
+
+/* ── Accessibilité focus ─────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid #4a90d9;
+  outline-offset: 2px;
 }
 
-HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+/* ── sr-only ─────────────────────────────────────────────────────────────── */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
+}
 
-# ─── CACHE ───────────────────────────────────────────────────────────────────
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color var(--theme-transition), color var(--theme-transition);
+}
 
-_cache: dict = {}
-CACHE_TTL = 600  # 10 minutes
+/* ── Scrollbar personnalisée ─────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg); transition: background-color var(--theme-transition); }
+::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 4px; transition: background-color var(--theme-transition); }
+::-webkit-scrollbar-thumb:hover { background: var(--dim); }
 
+/* ── Layout ──────────────────────────────────────────────────────────────── */
+.wrapper { max-width: 1400px; margin: 0 auto; padding: 0 16px; }
+@media (min-width: 768px) { .wrapper { padding: 0 24px; } }
+@media (min-width: 1024px) { .wrapper { padding: 0 32px; } }
+#main { outline: none; }
 
-def get_cached(key):
-    entry = _cache.get(key)
-    if entry and (time.time() - entry["ts"]) < CACHE_TTL:
-        return entry["data"], entry["ts"]
-    return None, None
+/* ── Header sticky ───────────────────────────────────────────────────────── */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 0;
+  margin-bottom: 16px;
+  backdrop-filter: blur(10px);
+  transition: background-color var(--theme-transition), border-color var(--theme-transition);
+}
+@media (min-width: 768px) {
+  header { padding: 16px 0; margin-bottom: 24px; }
+}
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.logo { display: flex; flex-direction: column; gap: 2px; }
+.logo-eyebrow {
+  font-family: var(--font-serif);
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--red);
+  line-height: 1.1;
+}
+@media (min-width: 768px) {
+  .logo-eyebrow { font-size: 1.9rem; }
+}
+.logo-title {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  line-height: 1.3;
+  letter-spacing: 0.3px;
+  transition: color var(--theme-transition);
+}
 
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px;
+  transition: background-color var(--theme-transition), border-color var(--theme-transition);
+}
+.tab {
+  min-height: 44px;
+  padding: 0 20px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color var(--transition), color var(--transition);
+  flex: 1;
+}
+.tab.active  { background: var(--red); color: #fff; }
+.tab:not(.active):hover { color: var(--text); background: var(--surface2); }
 
-def set_cached(key, data):
-    _cache[key] = {"data": data, "ts": time.time()}
+/* Theme toggle */
+.btn-theme {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 18px;
+  min-width: 44px; min-height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  transition: border-color var(--transition), color var(--transition);
+  flex-shrink: 0;
+}
+.btn-theme:hover { border-color: var(--red); color: var(--red); }
+.btn-theme:focus-visible { outline: 2px solid #4a90d9; outline-offset: 2px; }
+.btn-theme.rotating { animation: sunRotate 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+@keyframes sunRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 
+/* ── Toolbar sticky ─────────────────────────────────────────────────────── */
+.toolbar-sticky {
+  position: sticky;
+  top: 73px;
+  z-index: 40;
+  background: var(--bg);
+  padding: 12px 0 0;
+  margin-bottom: 0;
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(10px);
+  transition: background-color var(--theme-transition), border-color var(--theme-transition);
+}
 
-# ─── FETCH ───────────────────────────────────────────────────────────────────
+/* ── Toolbar ─────────────────────────────────────────────────────────────── */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 0;
+  flex-wrap: wrap;
+}
+.search-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+.search-icon {
+  position: absolute;
+  left: 12px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: 13px;
+  pointer-events: none;
+  transition: color var(--theme-transition);
+}
+input[type="text"], select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  padding: 0 14px;
+  outline: none;
+  transition: background-color var(--theme-transition), color var(--theme-transition), border-color var(--theme-transition), box-shadow var(--theme-transition);
+  width: 100%;
+  height: 44px;
+  min-height: 44px;
+}
+input[type="text"] { padding-left: 36px; }
+input[type="text"]:focus, select:focus {
+  border-color: var(--red);
+  box-shadow: 0 0 0 3px var(--red-glow);
+}
+select {
+  cursor: pointer;
+  appearance: none;
+  flex: 1;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+}
+select option { background: var(--surface); color: var(--text); }
+select option:checked { background: #d0021b; color: #fff; }
 
-def fetch_one(name, url, is_youtube):
-    try:
-        r = requests.get(url, headers=HEADERS, timeout=6)
-        r.raise_for_status()
-        feed = feedparser.parse(r.content)
-        items = []
-        for entry in feed.entries:
-            try:
-                dt = datetime(*entry.published_parsed[:6])
-                if is_youtube:
-                    v_id = (
-                        entry.link.split("v=")[1].split("&")[0]
-                        if "v=" in entry.link
-                        else entry.id.split(":")[-1]
-                    )
-                    img = f"https://img.youtube.com/vi/{v_id}/hqdefault.jpg"
-                    summary = ""
-                else:
-                    img = ""
-                    if hasattr(entry, "media_content") and entry.media_content:
-                        img = entry.media_content[0].get("url", "")
-                    elif hasattr(entry, "enclosures") and entry.enclosures:
-                        img = entry.enclosures[0].get("href", "")
-                    raw = re.sub(r"<[^<]+?>", "", entry.get("summary", ""))
-                    summary = (raw[:130] + "…") if len(raw) > 130 else raw
+/* Mobile: filtres cachés par défaut */
+.toolbar-filters {
+  display: contents;
+}
+@media (max-width: 768px) {
+  .toolbar-filters {
+    display: none;
+    contents: unset;
+    width: 100%;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .toolbar-filters.open { display: flex; }
+  .toolbar-filters select { width: 100%; }
+}
 
-                items.append({
-                    "source": name,
-                    "title": entry.title,
-                    "link": entry.link,
-                    "date": dt.isoformat(),
-                    "date_display": dt.strftime("%d %b %Y · %H:%M"),
-                    "image": img,
-                    "summary": summary,
-                    "is_video": is_youtube,
-                })
-            except Exception:
-                continue
-        return name, items, None
-    except requests.Timeout:
-        return name, [], f"{name} : timeout (6s)"
-    except Exception as e:
-        return name, [], f"{name} : {str(e)[:80]}"
+/* ── Meta bar ────────────────────────────────────────────────────────────── */
+.meta-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0 0;
+  padding-bottom: 12px;
+  flex-wrap: wrap;
+}
+.count-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 3px 12px;
+  letter-spacing: 0.3px;
+  transition: background-color var(--theme-transition), color var(--theme-transition), border-color var(--theme-transition);
+}
+.last-update { font-size: 11px; color: var(--dim); margin-left: auto; transition: color var(--theme-transition); }
 
+/* Refresh button */
+.btn-refresh {
+  min-height: 44px;
+  padding: 0 16px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color var(--transition), border-color var(--transition);
+  white-space: nowrap;
+  display: flex; align-items: center; gap: 6px;
+  flex-shrink: 0;
+}
+.btn-refresh:hover { color: var(--red); border-color: var(--red); }
+.btn-refresh:focus-visible { outline: 2px solid #4a90d9; outline-offset: 2px; }
+.btn-refresh.spinning .refresh-icon { animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
-def fetch_all(source_dict, is_youtube):
-    all_items, errors = [], []
-    with ThreadPoolExecutor(max_workers=8) as ex:
-        futures = {ex.submit(fetch_one, n, u, is_youtube): n for n, u in source_dict.items()}
-        for fut in as_completed(futures):
-            name, items, err = fut.result()
-            all_items.extend(items)
-            if err:
-                errors.append(err)
-    all_items.sort(key=lambda x: x["date"], reverse=True)
-    return all_items, errors
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 10px 20px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease, background-color var(--theme-transition), color var(--theme-transition), border-color var(--theme-transition);
+  z-index: 200;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+/* Error banner */
+.error-banner {
+  background: rgba(208,2,27,0.1);
+  border: 1px solid rgba(208,2,27,0.3);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  font-size: 13px;
+  color: #ff7a7a;
+  margin-bottom: 12px;
+  line-height: 1.4;
+  transition: background-color var(--theme-transition), color var(--theme-transition), border-color var(--theme-transition);
+}
 
-# ─── ROUTES ──────────────────────────────────────────────────────────────────
+/* ── Grid ────────────────────────────────────────────────────────────────── */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  padding-bottom: 80px;
+  margin-top: 20px;
+  grid-auto-rows: 1fr;
+}
+@media (min-width: 640px) {
+  .grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+}
 
-@app.get("/", response_class=HTMLResponse)
-async def index():
-    html = Path("templates/index.html").read_text(encoding="utf-8")
-    return HTMLResponse(content=html)
+/* ── Card ────────────────────────────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition), background-color var(--theme-transition);
+  min-height: 44px;
+  cursor: pointer;
+  height: 100%;
+}
+.card:hover, .card:focus {
+  border-color: rgba(208,2,27,0.6);
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(208,2,27,0.1);
+  outline: none;
+}
+.card:focus-visible {
+  outline: 2px solid #4a90d9;
+  outline-offset: 2px;
+}
 
+/* Thumb */
+.card-thumb-wrap {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: var(--surface2);
+  flex-shrink: 0;
+  transition: background-color var(--theme-transition);
+}
+.card-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s ease;
+}
+.card:hover .card-thumb { transform: scale(1.03); }
+.card-thumb-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--surface2) 0%, #252525 100%);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 36px; opacity: 0.35;
+  transition: background-color var(--theme-transition);
+}
 
-@app.get("/api/feed")
-async def api_feed(
-    type: str = Query("articles"),
-    source: str = Query(""),
-    search: str = Query(""),
-    period: str = Query(""),
-    refresh: bool = Query(False),
-):
-    is_youtube = type == "videos"
-    cache_key = "youtube" if is_youtube else "articles"
+/* Body */
+.card-body {
+  padding: 14px 16px;
+  display: flex; flex-direction: column;
+  gap: 7px; flex: 1;
+}
+.card-source {
+  font-size: 9.5px; font-weight: 700;
+  letter-spacing: 1.2px; text-transform: uppercase;
+  color: var(--red);
+}
+.card-title {
+  font-size: 13.5px; font-weight: 600;
+  line-height: 1.45;
+  color: var(--text);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: color var(--theme-transition);
+}
+.card-summary {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  flex: 1;
+  transition: color var(--theme-transition);
+}
+.card-footer {
+  display: flex; align-items: center;
+  gap: 8px;
+  border-top: 1px solid var(--border);
+  padding-top: 10px; margin-top: 4px;
+  transition: border-color var(--theme-transition);
+  flex-wrap: wrap;
+}
+.card-date {
+  font-size: 13px;
+  color: var(--text-secondary);
+  letter-spacing: 0.2px;
+  transition: color var(--theme-transition);
+}
+.card-ai-badge {
+  font-size: 10px;
+  color: var(--dim);
+  margin-left: auto;
+  transition: color var(--theme-transition);
+}
 
-    if refresh:
-        _cache.pop(cache_key, None)
+/* Button "Obtenir un résumé" */
+.btn-get-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+  margin-left: auto;
+}
+.btn-get-summary:hover {
+  color: var(--red);
+  border-color: var(--red);
+  background: rgba(208,2,27,0.05);
+}
+.btn-get-summary:focus-visible {
+  outline: 2px solid #4a90d9;
+  outline-offset: 2px;
+}
 
-    items, fetch_ts = get_cached(cache_key)
-    errors = []
+/* ── Card flip 3D ────────────────────────────────────────────────────────── */
+.card-scene {
+  perspective: 1000px;
+  border-radius: 12px;
+  animation: fadeUp 0.35s ease both;
+}
+.card-flip-inner {
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+.card-scene.is-flipped .card-flip-inner {
+  transform: rotateY(180deg);
+}
+.card-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.card-face-back {
+  transform: rotateY(180deg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.card-back-overlay {
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 24px;
+}
+body.light .card-back-overlay {
+  background: rgba(255, 255, 255, 0.55);
+}
+.badge-lu {
+  background: var(--red);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  padding: 6px 18px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  box-shadow: 0 4px 14px rgba(208, 2, 27, 0.4);
+}
+.badge-lu-check {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.7);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.badge-lu-check::after {
+  content: '';
+  display: block;
+  width: 5px; height: 3px;
+  border-left: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+  transform: rotate(-45deg) translateY(-1px);
+}
+.back-article-title {
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 500;
+  text-align: center;
+  line-height: 1.45;
+  opacity: 0.88;
+  max-width: 200px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+body.light .back-article-title { color: #111; opacity: 0.8; }
+.btn-unread {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.35);
+  border-radius: 8px;
+  color: #fff;
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 9px 18px;
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition);
+  letter-spacing: 0.2px;
+  min-height: 36px;
+}
+body.light .btn-unread { border-color: rgba(0,0,0,0.25); color: #333; }
+.btn-unread:hover { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.65); }
+body.light .btn-unread:hover { background: rgba(0,0,0,0.07); border-color: rgba(0,0,0,0.45); }
+.btn-unread:focus-visible { outline: 2px solid #4a90d9; outline-offset: 2px; }
 
-    if items is None:
-        source_dict = YOUTUBE_CHANNELS if is_youtube else RSS_FEEDS
-        items, errors = fetch_all(source_dict, is_youtube)
-        set_cached(cache_key, items)
-        fetch_ts = time.time()
+/* La card elle-même garde sa hauteur via la scène */
+.card-scene .card {
+  position: absolute;
+  inset: 0;
+  animation: none;
+}
 
-    # Filters
-    filtered = items
-    if search:
-        q = search.lower()
-        filtered = [i for i in filtered if q in i["title"].lower()]
-    if source:
-        filtered = [i for i in filtered if i["source"] == source]
-    if period:
-        now = datetime.utcnow()
-        def in_period(item):
-            d = datetime.fromisoformat(item["date"])
-            if period == "today":
-                return d.date() == now.date()
-            elif period == "week":
-                return (now - d).days <= 7
-            elif period == "month":
-                return d.month == now.month and d.year == now.year
-            return True
-        filtered = [i for i in filtered if in_period(i)]
+/* Read state — plus utilisé pour l'opacité, géré par le flip */
+.card.read {
+  transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition), background-color var(--theme-transition);
+}
 
-    sources = list(YOUTUBE_CHANNELS.keys() if is_youtube else RSS_FEEDS.keys())
+/* ── Skeleton ────────────────────────────────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(90deg, var(--surface) 25%, var(--surface2) 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: 6px;
+}
+@keyframes shimmer { to { background-position: -200% 0; } }
+.card-skeleton {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: background-color var(--theme-transition), border-color var(--theme-transition);
+}
+.sk-img  { aspect-ratio: 16/9; width: 100%; border-radius: 0; }
+.sk-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.sk-src  { height: 9px;  width: 60px; }
+.sk-t1   { height: 14px; width: 100%; }
+.sk-t2   { height: 14px; width: 75%; }
+.sk-sum  { height: 11px; width: 90%; }
+.sk-date { height: 11px; width: 50%; margin-top: 4px; }
 
-    return JSONResponse({
-        "items": filtered,
-        "total": len(filtered),
-        "errors": errors,
-        "fetch_ts": fetch_ts,
-        "sources": sources,
-    })
+/* ── Empty state ─────────────────────────────────────────────────────────── */
+.state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--muted);
+}
+.state-icon { font-size: 48px; margin-bottom: 16px; }
+.state h3 {
+  font-family: var(--font-serif);
+  font-size: 1.4rem; color: var(--text);
+  margin-bottom: 8px; font-weight: 400;
+  transition: color var(--theme-transition);
+}
+.state p { font-size: 13px; color: var(--text-secondary); line-height: 1.5; transition: color var(--theme-transition); }
+.state .btn-reset {
+  display: inline-block;
+  margin-top: 16px;
+  padding: 10px 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all var(--theme-transition);
+  min-height: 44px;
+}
+.state .btn-reset:hover { color: var(--red); border-color: var(--red); }
+.state .btn-reset:focus-visible { outline: 2px solid #4a90d9; outline-offset: 2px; }
 
-# ─── SUMMARIZE ────────────────────────────────────────────────────────────────
+/* ── Back to top ─────────────────────────────────────────────────────────── */
+.btn-top {
+  position: fixed;
+  bottom: 24px; right: 24px;
+  width: 44px; height: 44px;
+  background: var(--red);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 16px rgba(208,2,27,0.4);
+  opacity: 0; pointer-events: none;
+  transform: translateY(10px);
+  transition: opacity 0.25s ease, transform 0.25s ease, background-color var(--theme-transition), box-shadow var(--theme-transition);
+  z-index: 90;
+  margin-bottom: 20px;
+}
+.btn-top.visible { opacity: 1; pointer-events: all; transform: translateY(0); }
+.btn-top:hover { background: #b00018; }
+.btn-top:focus-visible { outline: 2px solid #4a90d9; outline-offset: 2px; }
 
-def scrape_article(url: str) -> str:
-    """Scrape le texte principal d'un article."""
-    try:
-        r = requests.get(url, headers=HEADERS, timeout=8)
-        r.raise_for_status()
-        soup = BeautifulSoup(r.text, "html.parser")
-        for tag in soup(["script", "style", "nav", "footer", "aside",
-                          "header", "form", "iframe", "noscript"]):
-            tag.decompose()
-        main = (
-            soup.find("article")
-            or soup.find("main")
-            or soup.find(class_=re.compile(r"(content|article|post|entry)", re.I))
-            or soup.body
-        )
-        text = main.get_text(separator="\n", strip=True) if main else ""
-        return text[:4000]
-    except Exception:
-        return ""
+/* ── Modal ───────────────────────────────────────────────────────────────── */
+.modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.82);
+  backdrop-filter: blur(6px);
+  z-index: 100;
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.modal-backdrop.open { opacity: 1; pointer-events: all; }
+.modal {
+  background: var(--surface);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  width: 100%; max-width: 640px; max-height: 88vh;
+  overflow-y: auto;
+  display: flex; flex-direction: column;
+  transform: translateY(20px) scale(0.97);
+  transition: transform 0.25s ease, background-color var(--theme-transition), border-color var(--theme-transition);
+  box-shadow: 0 32px 80px rgba(0,0,0,0.7);
+}
+.modal-backdrop.open .modal { transform: translateY(0) scale(1); }
+.modal-header {
+  padding: 22px 24px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 8px;
+  position: sticky; top: 0;
+  background: var(--surface);
+  border-radius: 16px 16px 0 0;
+  z-index: 1;
+  transition: background-color var(--theme-transition), border-color var(--theme-transition);
+}
+.modal-source {
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 1.2px; text-transform: uppercase;
+  color: var(--red);
+}
+.modal-title {
+  font-family: var(--font-serif);
+  font-size: 1.25rem; color: var(--text);
+  line-height: 1.4; font-weight: 400;
+  transition: color var(--theme-transition);
+}
+.modal-meta { font-size: 11px; color: var(--muted); transition: color var(--theme-transition); }
+.modal-body { padding: 24px; flex: 1; }
+.modal-ai-label {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 14px;
+  transition: color var(--theme-transition);
+}
+.modal-ai-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%; background: var(--red);
+  animation: pulse 1.5s ease infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.7); }
+}
+.modal-summary {
+  font-size: 14.5px; line-height: 1.75;
+  color: var(--text-secondary); min-height: 80px;
+  transition: color var(--theme-transition);
+}
+.modal-summary.loading { color: var(--muted); font-style: italic; }
+.modal-footer {
+  padding: 16px 24px 22px;
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center;
+  justify-content: space-between;
+  gap: 12px; flex-wrap: wrap;
+  transition: border-color var(--theme-transition);
+}
+.btn-original {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 20px;
+  background: var(--red); color: #fff;
+  border: none; border-radius: 8px;
+  font-family: var(--font-sans); font-size: 13px; font-weight: 700;
+  cursor: pointer; text-decoration: none;
+  transition: background var(--transition), transform var(--transition);
+  min-height: 44px;
+}
+.btn-original:hover { background: #b00018; transform: translateY(-1px); }
+.btn-original:focus-visible { outline: 2px solid #4a90d9; outline-offset: 2px; }
 
+/* Button TTS */
+.btn-tts {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px;
+  padding: 0;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 18px;
+  cursor: pointer;
+  transition: all var(--transition);
+  flex-shrink: 0;
+}
+.btn-tts:hover {
+  color: var(--red);
+  border-color: var(--red);
+  background: rgba(208,2,27,0.05);
+}
+.btn-tts:focus-visible { outline: 2px solid #4a90d9; outline-offset: 2px; }
+.btn-tts.playing { color: var(--red); border-color: var(--red); }
+.btn-tts.playing::after {
+  content: '';
+  display: inline-block;
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--red);
+  margin-left: 6px;
+  animation: pulse 1s ease-in-out infinite;
+}
 
-def call_hf(text: str, title: str, is_video: bool = False) -> str:
-    """Appelle Llama via HuggingFace Inference API et retourne un résumé en français."""
-    content_type = "vidéo YouTube" if is_video else "article"
-    messages = [
-        {
-            "role": "system",
-            "content": (
-                f"Tu es un assistant spécialisé en technologie. "
-                f"Tu résumes des {content_type}s tech en français, en prose fluide de 5 à 8 phrases. "
-                f"Tu vas droit au but sans commencer par 'Cet article' ou 'Cette vidéo'."
-            ),
-        },
-        {
-            "role": "user",
-            "content": f"Résume cette {content_type} intitulée « {title} » :\n\n{text[:3500]}",
-        },
-    ]
-    headers = {
-        "Authorization": f"Bearer {HF_TOKEN}",
-        "Content-Type": "application/json",
+.btn-close-modal {
+  padding: 10px 16px; min-height: 44px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px; color: var(--muted);
+  font-family: var(--font-sans); font-size: 13px;
+  cursor: pointer; transition: all var(--theme-transition);
+}
+.btn-close-modal:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+.btn-close-modal:focus-visible { outline: 2px solid #4a90d9; outline-offset: 2px; }
+
+/* ── Filter toggle button ───────────────────────────────────────────────── */
+.btn-filter-toggle {
+  display: none;
+  min-height: 44px;
+  padding: 0 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 12px; font-weight: 600;
+  cursor: pointer;
+  align-items: center; gap: 6px;
+  flex-shrink: 0;
+  transition: all var(--theme-transition);
+}
+.btn-filter-toggle:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+.btn-filter-toggle:focus-visible { outline: 2px solid #4a90d9; outline-offset: 2px; }
+.btn-filter-toggle.open .filter-chevron { transform: rotate(180deg); }
+.filter-chevron {
+  display: inline-block;
+  transition: transform var(--transition);
+}
+
+/* ── Responsive mobile ───────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .btn-filter-toggle { display: flex; }
+  .header-inner { gap: 12px; }
+}
+</style>
+</head>
+<body>
+
+<a href="#main" class="skip-link">Aller au contenu principal</a>
+
+<div class="wrapper">
+  <!-- Header sticky -->
+  <header>
+    <div class="header-inner">
+      <div class="logo">
+        <h1 class="logo-eyebrow">Tech Watch</h1>
+        <span class="logo-title">Ma revue de presse tech</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0;">
+        <div class="tabs" id="main-tabs">
+          <button class="tab active" data-type="articles" aria-label="Afficher les articles presse">Articles presse</button>
+          <button class="tab" data-type="videos" aria-label="Afficher les vidéos YouTube">Vidéos YouTube</button>
+        </div>
+        <button class="btn-theme" id="btn-theme" aria-label="Basculer le thème clair/sombre (actuellement sombre)">🌙</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1">
+    <!-- Toolbar sticky -->
+    <div class="toolbar-sticky">
+      <div class="toolbar" role="search">
+        <div class="search-wrap">
+          <span class="search-icon" aria-hidden="true">🔍</span>
+          <label for="search" class="sr-only">Rechercher un article (minimum 2 caractères)</label>
+          <input type="text" id="search" placeholder="Rechercher…" autocomplete="off" aria-label="Rechercher un article">
+        </div>
+        <div class="toolbar-filters" id="toolbar-filters">
+          <label for="filter-source" class="sr-only">Filtrer par source</label>
+          <select id="filter-source" aria-label="Filtrer par source">
+            <option value="">Toutes les sources</option>
+          </select>
+          <label for="filter-period" class="sr-only">Filtrer par période</label>
+          <select id="filter-period" aria-label="Filtrer par période">
+            <option value="">Toutes les dates</option>
+            <option value="today">Aujourd'hui</option>
+            <option value="week">Cette semaine</option>
+            <option value="month">Ce mois</option>
+          </select>
+        </div>
+        <button class="btn-filter-toggle" id="btn-filter-toggle" aria-expanded="false" aria-controls="toolbar-filters">
+          <span class="filter-chevron">▼</span> Filtres
+        </button>
+      </div>
+
+      <!-- Meta -->
+      <div class="meta-bar">
+        <span class="count-badge" id="count" aria-live="polite">Chargement…</span>
+        <button class="btn-refresh" id="btn-refresh" aria-label="Actualiser les flux">
+          <span class="refresh-icon" aria-hidden="true">↻</span> <span class="refresh-text">Actualiser</span>
+        </button>
+        <span class="last-update" id="last-update" aria-live="polite"></span>
+      </div>
+    </div>
+
+    <!-- Errors -->
+    <div id="errors" role="alert" aria-live="assertive"></div>
+
+    <!-- Grid -->
+    <div class="grid" id="grid" role="list" aria-label="Articles"></div>
+
+    <!-- Load more sentinel (infinite scroll) -->
+    <div id="sentinel" style="height:1px;"></div>
+  </main>
+</div>
+
+<!-- Back to top -->
+<button class="btn-top" id="btn-top" aria-label="Retour en haut de page">↑</button>
+
+<!-- Toast -->
+<div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+<!-- Modal résumé IA -->
+<div class="modal-backdrop" id="modal-backdrop">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title-el">
+    <div class="modal-header">
+      <span class="modal-source" id="modal-source"></span>
+      <h2 class="modal-title" id="modal-title-el"></h2>
+      <span class="modal-meta" id="modal-meta"></span>
+    </div>
+    <div class="modal-body">
+      <div class="modal-ai-label">
+        <span class="modal-ai-dot" id="ai-dot"></span>
+        Résumé par IA
+      </div>
+      <p class="modal-summary loading" id="modal-summary">Analyse en cours…</p>
+    </div>
+    <div class="modal-footer">
+      <div style="display: flex; gap: 12px; align-items: center;">
+        <a class="btn-original" id="modal-link" href="#" target="_blank" rel="noopener noreferrer">
+          ↗ Lire l'article
+        </a>
+        <button class="btn-tts" id="btn-tts" aria-label="Écouter le résumé" title="Écouter le résumé">🔊</button>
+      </div>
+      <button class="btn-close-modal" id="btn-close-modal">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Placeholder image ───────────────────────────────────────────────────────
+const placeholderImg = 'https://raw.githubusercontent.com/Luklyn/TechWatch/main/public/images/tech-placeholder.jpg';
+
+// ── State ──────────────────────────────────────────────────────────────────
+const state = { type: 'articles', search: '', source: '', period: '' };
+let debounceTimer = null;
+let allItems      = [];
+let displayedCount = 0;
+const PAGE_SIZE    = 20;
+let loadTimeout    = null;
+const LOAD_TIMEOUT_MS = 5000;
+let currentSpeechUtterance = null;
+
+// ── DOM refs ───────────────────────────────────────────────────────────────
+const grid          = document.getElementById('grid');
+const countBadge    = document.getElementById('count');
+const lastUpdate    = document.getElementById('last-update');
+const errorsEl      = document.getElementById('errors');
+const searchEl      = document.getElementById('search');
+const sourceEl      = document.getElementById('filter-source');
+const periodEl      = document.getElementById('filter-period');
+const refreshBtn    = document.getElementById('btn-refresh');
+const sentinel      = document.getElementById('sentinel');
+const btnTop        = document.getElementById('btn-top');
+const toast         = document.getElementById('toast');
+const backdrop      = document.getElementById('modal-backdrop');
+const modalSource   = document.getElementById('modal-source');
+const modalTitleEl  = document.getElementById('modal-title-el');
+const modalMeta     = document.getElementById('modal-meta');
+const modalSummary  = document.getElementById('modal-summary');
+const modalLink     = document.getElementById('modal-link');
+const aiDot         = document.getElementById('ai-dot');
+const btnClose      = document.getElementById('btn-close-modal');
+const btnTTS        = document.getElementById('btn-tts');
+const btnFilterToggle = document.getElementById('btn-filter-toggle');
+const toolbarFilters  = document.getElementById('toolbar-filters');
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function relativeTime(ts) {
+  const delta = Math.floor(Date.now() / 1000 - ts);
+  if (delta < 60)   return "à l'instant";
+  if (delta < 3600) return `il y a ${Math.floor(delta / 60)} min`;
+  return `il y a ${Math.floor(delta / 3600)} h`;
+}
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function proxyImg(url, isVideo) {
+  if (isVideo || !url) return url;
+  return '/api/img?url=' + encodeURIComponent(url);
+}
+
+function showToast(msg) {
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2800);
+}
+
+function skeletons(n = PAGE_SIZE) {
+  return Array(n).fill(`
+    <div class="card-skeleton" role="listitem">
+      <div class="skeleton sk-img"></div>
+      <div class="sk-body">
+        <div class="skeleton sk-src"></div>
+        <div class="skeleton sk-t1"></div>
+        <div class="skeleton sk-t2"></div>
+        <div class="skeleton sk-sum"></div>
+        <div class="skeleton sk-date"></div>
+      </div>
+    </div>`).join('');
+}
+
+function cardHTML(item, idx) {
+  const imgSrc = proxyImg(item.image, item.is_video);
+  const imgUrl = imgSrc || placeholderImg;
+  const thumb = `<img class="card-thumb" src="${escHtml(imgUrl)}" alt="${escHtml(item.title)}" loading="lazy" onerror="this.closest('.card-thumb-wrap').innerHTML='<div class=\\'card-thumb-placeholder\\'>${item.is_video ? '▶' : '📰'}</div>'"/>`;
+  const summary = item.summary
+    ? `<p class="card-summary">${escHtml(item.summary)}</p>` : '';
+
+  // Hauteur dynamique estimée pour la scène (fixe pour garantir le flip)
+  return `
+    <div class="card-scene" style="animation-delay:${(idx % PAGE_SIZE) * 35}ms; min-height: 300px;" role="listitem">
+      <div class="card-flip-inner">
+
+        <!-- Recto -->
+        <div class="card-face">
+          <article class="card"
+            data-url="${escHtml(item.link)}"
+            data-title="${escHtml(item.title)}"
+            data-source="${escHtml(item.source)}"
+            data-date="${escHtml(item.date_display)}"
+            data-is-video="${item.is_video ? '1' : '0'}"
+            tabindex="0"
+            aria-label="${escHtml(item.title)}">
+            <div class="card-thumb-wrap">${thumb}</div>
+            <div class="card-body">
+              <span class="card-source">${escHtml(item.source)}</span>
+              <h2 class="card-title">${escHtml(item.title)}</h2>
+              ${summary}
+              <div class="card-footer">
+                <span class="card-date">📅 ${item.date_display}</span>
+                <button class="btn-get-summary" data-url="${escHtml(item.link)}" data-title="${escHtml(item.title)}" data-source="${escHtml(item.source)}" data-date="${escHtml(item.date_display)}" data-is-video="${item.is_video ? '1' : '0'}">
+                  ✦ Résumé IA
+                </button>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <!-- Verso -->
+        <div class="card-face card-face-back">
+          <div class="card-thumb-wrap" style="position:absolute;inset:0;height:100%;aspect-ratio:unset;">${thumb}</div>
+          <div class="card-back-overlay">
+            <div class="badge-lu"><span class="badge-lu-check"></span> Lu</div>
+            <p class="back-article-title">${escHtml(item.title)}</p>
+            <button class="btn-unread" data-url="${escHtml(item.link)}" aria-label="Marquer comme non lu">↩ Marquer non lu</button>
+          </div>
+        </div>
+
+      </div>
+    </div>`;
+}
+
+// ── Read state ─────────────────────────────────────────────────────────────
+const READ_KEY = 'read_articles';
+function getReadSet() {
+  try { return new Set(JSON.parse(localStorage.getItem(READ_KEY) || '[]')); }
+  catch { return new Set(); }
+}
+function markAsRead(url) {
+  const read = getReadSet();
+  read.add(url);
+  localStorage.setItem(READ_KEY, JSON.stringify([...read].slice(-500)));
+}
+function applyReadState() {
+  const read = getReadSet();
+  grid.querySelectorAll('.card[data-url]').forEach(card => {
+    if (read.has(card.dataset.url)) {
+      card.classList.add('read');
+      card.closest('.card-scene')?.classList.add('is-flipped');
     }
-    payload = {
-        "model": HF_MODEL,
-        "messages": messages,
-        "max_tokens": 512,
-        "temperature": 0.3,
+  });
+}
+
+// ── Infinite scroll ────────────────────────────────────────────────────────
+function appendItems(items) {
+  const frag = document.createDocumentFragment();
+  const tmp  = document.createElement('div');
+  items.forEach((item, i) => {
+    tmp.innerHTML = cardHTML(item, displayedCount + i);
+    frag.appendChild(tmp.firstElementChild);
+  });
+  grid.appendChild(frag);
+  applyReadState();
+  attachCardEventListeners();
+}
+
+function loadMore() {
+  const next = allItems.slice(displayedCount, displayedCount + PAGE_SIZE);
+  if (!next.length) return;
+  appendItems(next);
+  displayedCount += next.length;
+}
+
+const observer = new IntersectionObserver(entries => {
+  if (entries[0].isIntersecting) loadMore();
+}, { rootMargin: '300px' });
+observer.observe(sentinel);
+
+// ── TTS Web Speech API ──────────────────────────────────────────────────────
+function speakText(text) {
+  if (!('speechSynthesis' in window)) {
+    showToast('❌ La synthèse vocale n\'est pas supportée par votre navigateur.');
+    return;
+  }
+
+  speechSynthesis.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  // Détecter la langue selon la source affichée dans la modale
+  utterance.lang = 'fr-FR';
+  utterance.rate = 1;
+  utterance.pitch = 1;
+  utterance.volume = 1;
+
+  currentSpeechUtterance = utterance;
+
+  utterance.onstart = () => {
+    btnTTS.classList.add('playing');
+    btnTTS.setAttribute('aria-label', 'Pause (lecture en cours)');
+  };
+
+  utterance.onend = () => {
+    btnTTS.classList.remove('playing');
+    btnTTS.setAttribute('aria-label', 'Écouter le résumé');
+  };
+
+  utterance.onerror = () => {
+    showToast('❌ Erreur lors de la lecture audio.');
+    btnTTS.classList.remove('playing');
+  };
+
+  speechSynthesis.speak(utterance);
+}
+
+function toggleTTS() {
+  if (speechSynthesis.paused) {
+    speechSynthesis.resume();
+    btnTTS.classList.add('playing');
+  } else if (speechSynthesis.speaking) {
+    speechSynthesis.pause();
+    btnTTS.classList.remove('playing');
+  } else {
+    const text = modalSummary.textContent;
+    speakText(text);
+  }
+}
+
+btnTTS.addEventListener('click', (e) => {
+  e.stopPropagation();
+  toggleTTS();
+});
+
+// ── Modal avec gestion du focus ────────────────────────────────────────────
+let previouslyFocused = null;
+
+function openModal(item) {
+  previouslyFocused = document.activeElement;
+  
+  modalSource.textContent = item.source;
+  modalTitleEl.textContent = item.title;
+  modalMeta.textContent   = `📅 ${item.date}`;
+  modalLink.href          = item.url;
+  modalLink.setAttribute('rel', 'noopener noreferrer');
+
+  modalSummary.textContent = 'Analyse en cours…';
+  modalSummary.classList.add('loading');
+  aiDot.style.animationPlayState = 'running';
+
+  backdrop.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  
+  setTimeout(() => modalLink.focus(), 250);
+
+  backdrop.addEventListener('keydown', handleModalKeydown);
+
+  speechSynthesis.cancel();
+  btnTTS.classList.remove('playing');
+
+  fetch('/api/summarize', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url: item.url, title: item.title, is_video: item.is_video }),
+  })
+  .then(r => r.json())
+  .then(data => {
+    modalSummary.textContent = data.summary || 'Aucun résumé disponible.';
+    modalSummary.classList.remove('loading');
+    aiDot.style.animationPlayState = 'paused';
+    aiDot.style.opacity = '1';
+  })
+  .catch(() => {
+    modalSummary.textContent = 'Erreur lors de la génération du résumé.';
+    modalSummary.classList.remove('loading');
+  });
+}
+
+function handleModalKeydown(e) {
+  if (e.key === 'Tab') {
+    const focusableElements = backdrop.querySelectorAll(
+      'a, button, [tabindex]:not([tabindex="-1"])'
+    );
+    const firstEl = focusableElements[0];
+    const lastEl = focusableElements[focusableElements.length - 1];
+
+    if (e.shiftKey) {
+      if (document.activeElement === firstEl) {
+        lastEl.focus();
+        e.preventDefault();
+      }
+    } else {
+      if (document.activeElement === lastEl) {
+        firstEl.focus();
+        e.preventDefault();
+      }
     }
-    try:
-        r = requests.post(HF_URL, headers=headers, json=payload, timeout=60)
-        if r.status_code == 503:
-            # Modèle en cours de chargement (cold start), attendre et réessayer
-            time.sleep(20)
-            r = requests.post(HF_URL, headers=headers, json=payload, timeout=60)
-        r.raise_for_status()
-        data = r.json()
-        return data["choices"][0]["message"]["content"].strip()
-    except Exception as e:
-        return f"Impossible de générer le résumé : {str(e)[:150]}"
+  }
+}
 
+function closeModal() {
+  backdrop.classList.remove('open');
+  document.body.style.overflow = '';
+  backdrop.removeEventListener('keydown', handleModalKeydown);
+  speechSynthesis.cancel();
+  btnTTS.classList.remove('playing');
+  
+  if (previouslyFocused) {
+    previouslyFocused.focus();
+  }
+}
 
-_summary_cache: dict = {}
+// ── Attach event listeners to cards ─────────────────────────────────────────
+function attachCardEventListeners() {
+  grid.querySelectorAll('.card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('.btn-get-summary')) return;
 
-@app.post("/api/summarize")
-async def api_summarize(body: dict):
-    url   = body.get("url", "")
-    title = body.get("title", "")
-    if not url:
-        return JSONResponse({"error": "URL manquante"}, status_code=400)
+      const url = card.dataset.url;
+      markAsRead(url);
+      card.classList.add('read');
 
-    # Retourner le cache si deja genere
-    if url in _summary_cache:
-        return JSONResponse({"summary": _summary_cache[url], "cached": True})
+      // Flip la carte
+      const scene = card.closest('.card-scene');
+      if (scene) scene.classList.add('is-flipped');
 
-    text    = scrape_article(url)
-    is_video = body.get("is_video", False)
-    summary = call_hf(text or f"Contenu non lisible pour : {title}", title, is_video=is_video)
+      window.open(url, '_blank');
+    });
 
-    # Mettre en cache uniquement si succes
-    if not summary.startswith("Impossible"):
-        _summary_cache[url] = summary
+    card.addEventListener('keydown', (e) => {
+      if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('.btn-get-summary')) {
+        e.preventDefault();
+        const url = card.dataset.url;
+        markAsRead(url);
+        card.classList.add('read');
+        const scene = card.closest('.card-scene');
+        if (scene) scene.classList.add('is-flipped');
+        window.open(url, '_blank');
+      }
+    });
+  });
 
-    return JSONResponse({"summary": summary})
+  grid.querySelectorAll('.btn-get-summary').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
 
+      const item = {
+        url:      btn.dataset.url,
+        title:    btn.dataset.title,
+        source:   btn.dataset.source,
+        date:     btn.dataset.date,
+        is_video: btn.dataset.isVideo === '1',
+      };
 
-# ─── IMAGE PROXY ─────────────────────────────────────────────────────────────
+      openModal(item);
+    });
+  });
 
-from fastapi import Response
-from urllib.parse import urlparse
+  // Bouton "Marquer non lu" sur le verso
+  grid.querySelectorAll('.btn-unread').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
 
-@app.get("/api/img")
-async def img_proxy(url: str = Query(...)):
-    """
-    Proxy d'images : récupère l'image côté serveur avec le bon Referer
-    pour contourner les restrictions hotlinking des sites.
-    """
-    try:
-        parsed   = urlparse(url)
-        referrer = f"{parsed.scheme}://{parsed.netloc}/"
-        headers  = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-            "Referer":    referrer,
-            "Accept":     "image/webp,image/apng,image/*,*/*;q=0.8",
-        }
-        r = requests.get(url, headers=headers, timeout=8, stream=True)
-        r.raise_for_status()
-        content_type = r.headers.get("Content-Type", "image/jpeg")
-        return Response(content=r.content, media_type=content_type, headers={
-            "Cache-Control": "public, max-age=86400",  # cache 24h côté navigateur
-        })
-    except Exception:
-        # Retourner une image placeholder SVG si l'image est introuvable
-        svg = '''<svg xmlns="http://www.w3.org/2000/svg" width="800" height="160" viewBox="0 0 800 160">
-  <rect width="800" height="160" fill="#1c1c1c"/>
-  <text x="400" y="88" font-family="sans-serif" font-size="32" fill="#333" text-anchor="middle">📰</text>
-</svg>'''
-        return Response(content=svg, media_type="image/svg+xml", headers={
-            "Cache-Control": "public, max-age=3600",
-        })
+      const url = btn.dataset.url;
+
+      // Retirer de localStorage
+      const read = getReadSet();
+      read.delete(url);
+      localStorage.setItem(READ_KEY, JSON.stringify([...read]));
+
+      // Défliper la scène
+      const scene = btn.closest('.card-scene');
+      if (scene) {
+        scene.classList.remove('is-flipped');
+        // Retirer la classe read de la card recto
+        const card = scene.querySelector('.card[data-url]');
+        if (card) card.classList.remove('read');
+      }
+
+      showToast('↩ Article marqué comme non lu');
+    });
+  });
+}
+
+btnClose.addEventListener('click', closeModal);
+backdrop.addEventListener('click', e => { if (e.target === backdrop) closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// ── Fetch & Render ─────────────────────────────────────────────────────────
+async function load(forceRefresh = false) {
+  if (forceRefresh) {
+    refreshBtn.classList.add('spinning');
+  }
+  
+  grid.innerHTML = skeletons(3);
+  errorsEl.innerHTML = '';
+  allItems = [];
+  displayedCount = 0;
+
+  const params = new URLSearchParams({
+    type: state.type, search: state.search,
+    source: state.source, period: state.period,
+    refresh: forceRefresh ? '1' : '0',
+  });
+
+  loadTimeout = setTimeout(() => {
+    grid.innerHTML = `
+      <div class="state">
+        <div class="state-icon">⏱</div>
+        <h3>Chargement trop long</h3>
+        <p>Le serveur met du temps à répondre. Veuillez réessayer.</p>
+        <button class="btn-reset" onclick="location.reload()">Recharger la page</button>
+      </div>`;
+    refreshBtn.classList.remove('spinning');
+  }, LOAD_TIMEOUT_MS);
+
+  try {
+    const res  = await fetch(`/api/feed?${params}`);
+    const data = await res.json();
+    
+    clearTimeout(loadTimeout);
+
+    sourceEl.innerHTML = '<option value="">Toutes les sources</option>' +
+      data.sources.map(s =>
+        `<option value="${s}"${s === state.source ? ' selected' : ''}>${s}</option>`
+      ).join('');
+
+    data.errors.forEach(e => {
+      errorsEl.innerHTML += `<div class="error-banner">⚠️ ${escHtml(e)}</div>`;
+    });
+
+    const n = data.total;
+    countBadge.textContent = `${n} résultat${n !== 1 ? 's' : ''}`;
+    lastUpdate.textContent = `Mis à jour ${relativeTime(data.fetch_ts)}`;
+
+    if (forceRefresh) showToast('✓ Articles mis à jour !');
+
+    grid.innerHTML = '';
+
+    if (data.items.length === 0) {
+      const isSearch = state.search || state.source !== '' || state.period !== '';
+      grid.innerHTML = `
+        <div class="state">
+          <div class="state-icon">${isSearch ? '🔍' : '📡'}</div>
+          <h3>${isSearch ? `Aucun résultat pour « ${escHtml(state.search || state.source)} »` : 'Aucun contenu disponible.'}</h3>
+          <p>${isSearch ? 'Essayez un autre terme ou retirez vos filtres.' : 'Vérifiez votre connexion ou actualisez.'}</p>
+          ${isSearch ? '<button class="btn-reset" id="btn-reset">Effacer les filtres</button>' : ''}
+        </div>`;
+      document.getElementById('btn-reset')?.addEventListener('click', () => {
+        searchEl.value = ''; sourceEl.value = ''; periodEl.value = '';
+        state.search = ''; state.source = ''; state.period = '';
+        load();
+      });
+    } else {
+      allItems = data.items;
+      loadMore();
+    }
+  } catch (err) {
+    clearTimeout(loadTimeout);
+    grid.innerHTML = `
+      <div class="state">
+        <div class="state-icon">📡</div>
+        <h3>Erreur de connexion</h3>
+        <p>Impossible de joindre le serveur.</p>
+        <button class="btn-reset" onclick="location.reload()">Recharger la page</button>
+      </div>`;
+  } finally {
+    refreshBtn.classList.remove('spinning');
+  }
+}
+
+// ── Back to top ────────────────────────────────────────────────────────────
+window.addEventListener('scroll', () => {
+  btnTop.classList.toggle('visible', window.scrollY > 200);
+}, { passive: true });
+btnTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+// ── Mobile filter toggle ───────────────────────────────────────────────────
+btnFilterToggle.addEventListener('click', () => {
+  const open = toolbarFilters.classList.toggle('open');
+  btnFilterToggle.classList.toggle('open', open);
+  btnFilterToggle.setAttribute('aria-expanded', open);
+});
+
+// ── Events ─────────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    state.type = btn.dataset.type;
+    state.source = ''; sourceEl.value = '';
+    load();
+  });
+});
+
+searchEl.addEventListener('input', () => {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => {
+    const value = searchEl.value.trim();
+    if (value.length === 0 || value.length >= 2) {
+      state.search = value;
+      load();
+    }
+  }, 500);
+});
+
+sourceEl.addEventListener('change', () => { state.source = sourceEl.value; load(); });
+periodEl.addEventListener('change', () => { state.period = periodEl.value; load(); });
+refreshBtn.addEventListener('click', () => load(true));
+
+// ── Theme toggle avec animation progressive ────────────────────────────────
+const btnTheme = document.getElementById('btn-theme');
+const saved    = localStorage.getItem('theme');
+if (saved === 'light') { 
+  document.body.classList.add('light'); 
+  btnTheme.textContent = '☀️';
+  btnTheme.setAttribute('aria-label', 'Basculer le thème clair/sombre (actuellement clair)');
+}
+btnTheme.addEventListener('click', () => {
+  btnTheme.classList.add('rotating');
+  
+  const isLight = document.body.classList.toggle('light');
+  btnTheme.textContent = isLight ? '☀️' : '🌙';
+  btnTheme.setAttribute('aria-label', `Basculer le thème clair/sombre (actuellement ${isLight ? 'clair' : 'sombre'})`);
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+  
+  setTimeout(() => btnTheme.classList.remove('rotating'), 1200);
+});
+
+// ── Init ───────────────────────────────────────────────────────────────────
+// Calcul dynamique du top de la toolbar sticky selon la hauteur du header
+function updateToolbarTop() {
+  const headerH = document.querySelector('header').offsetHeight;
+  document.querySelector('.toolbar-sticky').style.top = headerH + 'px';
+}
+updateToolbarTop();
+window.addEventListener('resize', updateToolbarTop, { passive: true });
+
+load();
+</script>
+</body>
+</html>
