@@ -30,11 +30,7 @@ RSS_FEEDS = {
     "TechPowerUp":    "https://www.techpowerup.com/rss/news",
     "Hardware & Co":  "https://hardwareand.co/actualites?format=feed&type=rss",
     "Hardware.fr":    "https://www.hardware.fr/backend/news.xml",
-    "Tom's Hardware": "https://www.tomshardware.com/feeds/all",
-    "01net":          "https://www.01net.com/actualites/feed",
-    "The Verge":      "https://www.theverge.com/rss/index.xml",
-    "Ars Technica":   "https://feeds.arstechnica.com/arstechnica/gadgets",
-    "Digital Foundry": "https://www.digitalfoundry.net/feed",
+    "Les Numériques": "https://www.lesnumeriques.com/informatique/rss.xml",
 }
 
 
@@ -44,9 +40,6 @@ YOUTUBE_CHANNELS = {
     "Hardware Canucks": "https://www.youtube.com/feeds/videos.xml?channel_id=UCTzLRZUgelatKZ4nyIKcAbg",
     "Hardware Unboxed": "https://www.youtube.com/feeds/videos.xml?channel_id=UCI8iQa1hv7oV_Z8D35vVuSg",
     "Matt Lee":         "https://www.youtube.com/feeds/videos.xml?channel_id=UCGHzpEcSwfBQJAitgw2pgVQ",
-    "Der8auer En" :     "https://www.youtube.com/feeds/videos.xml?channel_id=UCGsaijjOJshS2_ZmMNZgS-g",
-    "Linus Tech Tips":  "https://www.youtube.com/feeds/videos.xml?channel_id=UCXuqSBlHAE6Xw-yeJA0Tunw",
-    "Boot Sequence":    "https://www.youtube.com/feeds/videos.xml?channel_id=UCac6UP9a9vR7tEkMjl4UHtg",
 }
 
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
@@ -79,6 +72,8 @@ def fetch_one(name, url, is_youtube):
         for entry in feed.entries:
             try:
                 dt = datetime(*entry.published_parsed[:6])
+                if is_youtube and '/shorts/' in entry.link:
+                    continue  # Ignorer les Shorts YouTube
                 if is_youtube:
                     v_id = (
                         entry.link.split("v=")[1].split("&")[0]
