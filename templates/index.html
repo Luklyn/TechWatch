@@ -470,14 +470,15 @@ select option:checked { background: #d0021b; color: #fff; }
   letter-spacing: 0.2px;
   transition: color var(--theme-transition);
 }
-.card-ai-badge {
-  font-size: 10px;
-  color: var(--dim);
-  margin-left: auto;
-  transition: color var(--theme-transition);
+
+/* ── Rainbow gradient animation ─────────────────────────────────────────── */
+@keyframes rainbowShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
-/* Button "Obtenir un résumé" */
+/* Button "Obtenir un résumé" with rainbow effect */
 .btn-get-summary {
   display: inline-flex;
   align-items: center;
@@ -494,12 +495,36 @@ select option:checked { background: #d0021b; color: #fff; }
   transition: all var(--transition);
   white-space: nowrap;
   margin-left: auto;
+  position: relative;
 }
+
+.btn-get-summary .rainbow-text {
+  background: linear-gradient(90deg, 
+    #ff0000 0%, 
+    #ff7f00 16.67%, 
+    #ffff00 33.33%, 
+    #00ff00 50%, 
+    #0000ff 66.67%, 
+    #4b0082 83.33%, 
+    #ff0000 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: rainbowShift 6s ease-in-out infinite;
+  opacity: 0.7;
+}
+
 .btn-get-summary:hover {
   color: var(--red);
   border-color: var(--red);
   background: rgba(208,2,27,0.05);
 }
+
+.btn-get-summary:hover .rainbow-text {
+  opacity: 1;
+}
+
 .btn-get-summary:focus-visible {
   outline: 2px solid #4a90d9;
   outline-offset: 2px;
@@ -859,7 +884,7 @@ select option:checked { background: #d0021b; color: #fff; }
 
 <script>
 // ── Placeholder image ───────────────────────────────────────────────────────
-const placeholderImg = 'https://raw.githubusercontent.com/Luklyn/TechWatch/main/public/images/tech-placeholder.jpg';
+const placeholderImg = 'https://raw.githubusercontent.com/TON_USER/TON_REPO/main/public/images/tech-placeholder.jpg';
 
 // ── State ──────────────────────────────────────────────────────────────────
 const state = { type: 'articles', search: '', source: '', period: '' };
@@ -958,7 +983,7 @@ function cardHTML(item, idx) {
         <div class="card-footer">
           <span class="card-date">📅 ${item.date_display}</span>
           <button class="btn-get-summary" data-url="${escHtml(item.link)}" data-title="${escHtml(item.title)}" data-source="${escHtml(item.source)}" data-date="${escHtml(item.date_display)}" data-is-video="${item.is_video ? '1' : '0'}">
-            ✦ Résumé IA
+            <span class="rainbow-text">✦ Résumé IA</span>
           </button>
         </div>
       </div>
