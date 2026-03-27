@@ -482,7 +482,7 @@ select option:checked { background: #d0021b; color: #fff; }
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 14px;
+  padding: 10px 18px;
   background: var(--surface2);
   border: 1px solid var(--border);
   border-radius: 6px;
@@ -493,6 +493,7 @@ select option:checked { background: #d0021b; color: #fff; }
   cursor: pointer;
   transition: all var(--transition);
   white-space: nowrap;
+  margin-left: auto;
 }
 .btn-get-summary:hover {
   color: var(--red);
@@ -743,7 +744,7 @@ select option:checked { background: #d0021b; color: #fff; }
 .btn-filter-toggle.open .filter-chevron { transform: rotate(180deg); }
 .filter-chevron {
   display: inline-block;
-  transition: transform var(--interval);
+  transition: transform var(--transition);
 }
 
 /* ── Responsive mobile ───────────────────────────────────────────────────── */
@@ -858,7 +859,7 @@ select option:checked { background: #d0021b; color: #fff; }
 
 <script>
 // ── Placeholder image ───────────────────────────────────────────────────────
-const placeholderImg = 'https://raw.githubusercontent.com/Luklyn/TechWatch/main/public/images/tech-placeholder.jpg';
+const placeholderImg = 'https://raw.githubusercontent.com/TON_USER/TON_REPO/main/public/images/tech-placeholder.jpg';
 
 // ── State ──────────────────────────────────────────────────────────────────
 const state = { type: 'articles', search: '', source: '', period: '' };
