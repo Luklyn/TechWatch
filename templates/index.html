@@ -367,7 +367,6 @@ select option:checked { background: #d0021b; color: #fff; }
   gap: 20px;
   padding-bottom: 80px;
   margin-top: 20px;
-  align-items: start;
 }
 @media (min-width: 640px) {
   .grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
@@ -389,6 +388,7 @@ select option:checked { background: #d0021b; color: #fff; }
   transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition), background-color var(--theme-transition);
   min-height: 44px;
   cursor: pointer;
+  height: 100%;
 }
 .card:hover, .card:focus {
   border-color: rgba(208,2,27,0.6);
@@ -513,9 +513,12 @@ select option:checked { background: #d0021b; color: #fff; }
   perspective: 1000px;
   border-radius: 12px;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 .card-flip-inner {
   width: 100%;
+  flex: 1;
   transform-style: preserve-3d;
   transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
@@ -531,6 +534,9 @@ select option:checked { background: #d0021b; color: #fff; }
   border-radius: 12px;
   overflow: hidden;
   width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 /* Verso : superposé au recto, même taille */
 .card-face-back {
