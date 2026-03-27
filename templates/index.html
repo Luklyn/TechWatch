@@ -128,18 +128,21 @@ header {
 }
 .logo { display: flex; flex-direction: column; gap: 2px; }
 .logo-eyebrow {
-  font-size: 10px;
+  font-family: var(--font-serif);
+  font-size: 1.9rem;        
   font-weight: 700;
-  letter-spacing: 3px;
+  letter-spacing: 1px;      
   text-transform: uppercase;
   color: var(--red);
+  line-height: 1.1;
 }
 .logo-title {
-  font-family: var(--font-serif);
-  font-size: 1.4rem;
-  color: var(--text);
-  line-height: 1.1;
-  transition: color var(--theme-transition);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;       
+  font-weight: 500;
+  color: var(--text-secondary);
+  line-height: 1.3;
+  letter-spacing: 0.3px;
 }
 @media (min-width: 768px) {
   .logo-title { font-size: 1.9rem; }
@@ -814,9 +817,9 @@ body.light .btn-get-summary {
   <header>
     <div class="header-inner">
       <div class="logo">
-        <span class="logo-eyebrow">Tech Watch</span>
-        <h1 class="logo-title">Ma revue de presse tech</h1>
-      </div>
+  <h1 class="logo-eyebrow">Tech Watch</h1>
+  <span class="logo-title">Ma revue de presse tech</span>
+</div>
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0;">
         <div class="tabs" id="main-tabs">
           <button class="tab active" data-type="articles" aria-label="Afficher les articles presse">Articles presse</button>
