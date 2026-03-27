@@ -470,30 +470,39 @@ select option:checked { background: #d0021b; color: #fff; }
   letter-spacing: 0.2px;
   transition: color var(--theme-transition);
 }
-
-/* ── Rainbow gradient animation ─────────────────────────────────────────── */
-@keyframes glossShine {
-  0% { background-position: -200% 0; }
-  50% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+.card-ai-badge {
+  font-size: 10px;
+  color: var(--dim);
+  margin-left: auto;
+  transition: color var(--theme-transition);
 }
 
-.btn-get-summary .rainbow-text {
-  background: linear-gradient(90deg, 
-    rgba(255,255,255,0) 0%,
-    rgba(255,255,255,0.6) 50%,
-    rgba(255,255,255,0) 100%);
-  background-size: 200% 100%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: none;
-  opacity: 0.1;
+/* Button "Obtenir un résumé" */
+.btn-get-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+  margin-left: auto;
 }
-
-.btn-get-summary:hover .rainbow-text {
-  animation: glossShine 3s ease-in-out infinite;
-  opacity: 1;
+.btn-get-summary:hover {
+  color: var(--red);
+  border-color: var(--red);
+  background: rgba(208,2,27,0.05);
+}
+.btn-get-summary:focus-visible {
+  outline: 2px solid #4a90d9;
+  outline-offset: 2px;
 }
 
 /* Read state */
@@ -850,7 +859,7 @@ select option:checked { background: #d0021b; color: #fff; }
 
 <script>
 // ── Placeholder image ───────────────────────────────────────────────────────
-const placeholderImg = 'https://raw.githubusercontent.com/TON_USER/TON_REPO/main/public/images/tech-placeholder.jpg';
+const placeholderImg = 'https://raw.githubusercontent.com/Luklyn/TechWatch/main/public/images/tech-placeholder.jpg';
 
 // ── State ──────────────────────────────────────────────────────────────────
 const state = { type: 'articles', search: '', source: '', period: '' };
@@ -949,7 +958,7 @@ function cardHTML(item, idx) {
         <div class="card-footer">
           <span class="card-date">📅 ${item.date_display}</span>
           <button class="btn-get-summary" data-url="${escHtml(item.link)}" data-title="${escHtml(item.title)}" data-source="${escHtml(item.source)}" data-date="${escHtml(item.date_display)}" data-is-video="${item.is_video ? '1' : '0'}">
-            <span class="rainbow-text">✦ Résumé IA</span>
+            ✦ Résumé IA
           </button>
         </div>
       </div>
