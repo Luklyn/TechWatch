@@ -367,7 +367,6 @@ select option:checked { background: #d0021b; color: #fff; }
   gap: 20px;
   padding-bottom: 80px;
   margin-top: 20px;
-  grid-auto-rows: 1fr;
 }
 @media (min-width: 640px) {
   .grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
@@ -514,10 +513,10 @@ select option:checked { background: #d0021b; color: #fff; }
   perspective: 1000px;
   border-radius: 12px;
   animation: fadeUp 0.35s ease both;
+  position: relative;
 }
 .card-flip-inner {
   width: 100%;
-  height: 100%;
   transform-style: preserve-3d;
   transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
@@ -525,28 +524,39 @@ select option:checked { background: #d0021b; color: #fff; }
 .card-scene.is-flipped .card-flip-inner {
   transform: rotateY(180deg);
 }
-.card-face {
+/* Recto : flux normal, donne la hauteur */
+.card-face-front {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 12px;
+  overflow: hidden;
+  width: 100%;
+}
+/* Verso : superposé au recto, même taille */
+.card-face-back {
   position: absolute;
   inset: 0;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   border-radius: 12px;
   overflow: hidden;
+  transform: rotateY(180deg);
 }
 .card-face-back {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 12px;
+  overflow: hidden;
   transform: rotateY(180deg);
   background: var(--surface);
   border: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 .card-back-overlay {
   position: absolute;
   inset: 0;
-  backdrop-filter: blur(7px);
-  -webkit-backdrop-filter: blur(7px);
-  background: rgba(0, 0, 0, 0.45);
+  background: color-mix(in srgb, var(--red) 8%, var(--surface) 92%);
   border-radius: 12px;
   display: flex;
   flex-direction: column;
@@ -554,9 +564,6 @@ select option:checked { background: #d0021b; color: #fff; }
   justify-content: center;
   gap: 18px;
   padding: 24px;
-}
-body.light .card-back-overlay {
-  background: rgba(255, 255, 255, 0.55);
 }
 .badge-lu {
   background: var(--red);
@@ -588,46 +595,36 @@ body.light .card-back-overlay {
   transform: rotate(-45deg) translateY(-1px);
 }
 .back-article-title {
-  color: #fff;
+  color: var(--text);
   font-size: 12.5px;
   font-weight: 500;
   text-align: center;
   line-height: 1.45;
-  opacity: 0.88;
+  opacity: 0.75;
   max-width: 200px;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-body.light .back-article-title { color: #111; opacity: 0.8; }
 .btn-unread {
   background: transparent;
-  border: 1px solid rgba(255,255,255,0.35);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  color: #fff;
+  color: var(--text-secondary);
   font-family: var(--font-sans);
   font-size: 11.5px;
   font-weight: 600;
   padding: 9px 18px;
   cursor: pointer;
-  transition: background var(--transition), border-color var(--transition);
+  transition: background var(--transition), border-color var(--transition), color var(--transition);
   letter-spacing: 0.2px;
   min-height: 36px;
 }
-body.light .btn-unread { border-color: rgba(0,0,0,0.25); color: #333; }
-.btn-unread:hover { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.65); }
-body.light .btn-unread:hover { background: rgba(0,0,0,0.07); border-color: rgba(0,0,0,0.45); }
+.btn-unread:hover { color: var(--red); border-color: var(--red); background: var(--red-glow); }
 .btn-unread:focus-visible { outline: 2px solid #4a90d9; outline-offset: 2px; }
 
-/* La card elle-même garde sa hauteur via la scène */
-.card-scene .card {
-  position: absolute;
-  inset: 0;
-  animation: none;
-}
-
-/* Read state — plus utilisé pour l'opacité, géré par le flip */
+/* Read state — gere par le flip */
 .card.read {
   transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition), background-color var(--theme-transition);
 }
@@ -1062,11 +1059,11 @@ function cardHTML(item, idx) {
 
   // Hauteur dynamique estimée pour la scène (fixe pour garantir le flip)
   return `
-    <div class="card-scene" style="animation-delay:${(idx % PAGE_SIZE) * 35}ms; min-height: 300px;" role="listitem">
+    <div class="card-scene" style="animation-delay:${(idx % PAGE_SIZE) * 35}ms;" role="listitem">
       <div class="card-flip-inner">
 
         <!-- Recto -->
-        <div class="card-face">
+        <div class="card-face-front">
           <article class="card"
             data-url="${escHtml(item.link)}"
             data-title="${escHtml(item.title)}"
@@ -1091,8 +1088,7 @@ function cardHTML(item, idx) {
         </div>
 
         <!-- Verso -->
-        <div class="card-face card-face-back">
-          <div class="card-thumb-wrap" style="position:absolute;inset:0;height:100%;aspect-ratio:unset;">${thumb}</div>
+        <div class="card-face-back">
           <div class="card-back-overlay">
             <div class="badge-lu"><span class="badge-lu-check"></span> Lu</div>
             <p class="back-article-title">${escHtml(item.title)}</p>
