@@ -367,12 +367,17 @@ select option:checked { background: #d0021b; color: #fff; }
   gap: 20px;
   padding-bottom: 80px;
   margin-top: 20px;
+  grid-auto-rows: 1fr;
 }
 @media (min-width: 640px) {
   .grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
 }
 
 /* ── Card ────────────────────────────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -382,13 +387,9 @@ select option:checked { background: #d0021b; color: #fff; }
   flex-direction: column;
   position: relative;
   transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition), background-color var(--theme-transition);
-  animation: fadeUp 0.35s ease both;
   min-height: 44px;
   cursor: pointer;
-}
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(14px); }
-  to   { opacity: 1; transform: translateY(0); }
+  height: 100%;
 }
 .card:hover, .card:focus {
   border-color: rgba(208,2,27,0.6);
@@ -508,13 +509,128 @@ select option:checked { background: #d0021b; color: #fff; }
   outline-offset: 2px;
 }
 
-/* Read state */
-.card.read {
-  opacity: 0.6;
-  filter: grayscale(35%);
-  transition: opacity var(--transition), filter var(--transition), border-color var(--transition), transform var(--transition), box-shadow var(--transition), background-color var(--theme-transition);
+/* ── Card flip 3D ────────────────────────────────────────────────────────── */
+.card-scene {
+  perspective: 1000px;
+  border-radius: 12px;
+  animation: fadeUp 0.35s ease both;
 }
-.card.read:hover { opacity: 0.85; filter: grayscale(0%); }
+.card-flip-inner {
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+.card-scene.is-flipped .card-flip-inner {
+  transform: rotateY(180deg);
+}
+.card-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.card-face-back {
+  transform: rotateY(180deg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.card-back-overlay {
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 24px;
+}
+body.light .card-back-overlay {
+  background: rgba(255, 255, 255, 0.55);
+}
+.badge-lu {
+  background: var(--red);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  padding: 6px 18px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  box-shadow: 0 4px 14px rgba(208, 2, 27, 0.4);
+}
+.badge-lu-check {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.7);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.badge-lu-check::after {
+  content: '';
+  display: block;
+  width: 5px; height: 3px;
+  border-left: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+  transform: rotate(-45deg) translateY(-1px);
+}
+.back-article-title {
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 500;
+  text-align: center;
+  line-height: 1.45;
+  opacity: 0.88;
+  max-width: 200px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+body.light .back-article-title { color: #111; opacity: 0.8; }
+.btn-unread {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.35);
+  border-radius: 8px;
+  color: #fff;
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 9px 18px;
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition);
+  letter-spacing: 0.2px;
+  min-height: 36px;
+}
+body.light .btn-unread { border-color: rgba(0,0,0,0.25); color: #333; }
+.btn-unread:hover { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.65); }
+body.light .btn-unread:hover { background: rgba(0,0,0,0.07); border-color: rgba(0,0,0,0.45); }
+.btn-unread:focus-visible { outline: 2px solid #4a90d9; outline-offset: 2px; }
+
+/* La card elle-même garde sa hauteur via la scène */
+.card-scene .card {
+  position: absolute;
+  inset: 0;
+  animation: none;
+}
+
+/* Read state — plus utilisé pour l'opacité, géré par le flip */
+.card.read {
+  transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition), background-color var(--theme-transition);
+}
 
 /* ── Skeleton ────────────────────────────────────────────────────────────── */
 .skeleton {
@@ -943,29 +1059,49 @@ function cardHTML(item, idx) {
   const thumb = `<img class="card-thumb" src="${escHtml(imgUrl)}" alt="${escHtml(item.title)}" loading="lazy" onerror="this.closest('.card-thumb-wrap').innerHTML='<div class=\\'card-thumb-placeholder\\'>${item.is_video ? '▶' : '📰'}</div>'"/>`;
   const summary = item.summary
     ? `<p class="card-summary">${escHtml(item.summary)}</p>` : '';
+
+  // Hauteur dynamique estimée pour la scène (fixe pour garantir le flip)
   return `
-    <article class="card" style="animation-delay:${(idx % PAGE_SIZE) * 35}ms"
-      data-url="${escHtml(item.link)}"
-      data-title="${escHtml(item.title)}"
-      data-source="${escHtml(item.source)}"
-      data-date="${escHtml(item.date_display)}"
-      data-is-video="${item.is_video ? '1' : '0'}"
-      role="listitem"
-      tabindex="0"
-      aria-label="${escHtml(item.title)}">
-      <div class="card-thumb-wrap">${thumb}</div>
-      <div class="card-body">
-        <span class="card-source">${escHtml(item.source)}</span>
-        <h2 class="card-title">${escHtml(item.title)}</h2>
-        ${summary}
-        <div class="card-footer">
-          <span class="card-date">📅 ${item.date_display}</span>
-          <button class="btn-get-summary" data-url="${escHtml(item.link)}" data-title="${escHtml(item.title)}" data-source="${escHtml(item.source)}" data-date="${escHtml(item.date_display)}" data-is-video="${item.is_video ? '1' : '0'}">
-            ✦ Résumé IA
-          </button>
+    <div class="card-scene" style="animation-delay:${(idx % PAGE_SIZE) * 35}ms; min-height: 300px;" role="listitem">
+      <div class="card-flip-inner">
+
+        <!-- Recto -->
+        <div class="card-face">
+          <article class="card"
+            data-url="${escHtml(item.link)}"
+            data-title="${escHtml(item.title)}"
+            data-source="${escHtml(item.source)}"
+            data-date="${escHtml(item.date_display)}"
+            data-is-video="${item.is_video ? '1' : '0'}"
+            tabindex="0"
+            aria-label="${escHtml(item.title)}">
+            <div class="card-thumb-wrap">${thumb}</div>
+            <div class="card-body">
+              <span class="card-source">${escHtml(item.source)}</span>
+              <h2 class="card-title">${escHtml(item.title)}</h2>
+              ${summary}
+              <div class="card-footer">
+                <span class="card-date">📅 ${item.date_display}</span>
+                <button class="btn-get-summary" data-url="${escHtml(item.link)}" data-title="${escHtml(item.title)}" data-source="${escHtml(item.source)}" data-date="${escHtml(item.date_display)}" data-is-video="${item.is_video ? '1' : '0'}">
+                  ✦ Résumé IA
+                </button>
+              </div>
+            </div>
+          </article>
         </div>
+
+        <!-- Verso -->
+        <div class="card-face card-face-back">
+          <div class="card-thumb-wrap" style="position:absolute;inset:0;height:100%;aspect-ratio:unset;">${thumb}</div>
+          <div class="card-back-overlay">
+            <div class="badge-lu"><span class="badge-lu-check"></span> Lu</div>
+            <p class="back-article-title">${escHtml(item.title)}</p>
+            <button class="btn-unread" data-url="${escHtml(item.link)}" aria-label="Marquer comme non lu">↩ Marquer non lu</button>
+          </div>
+        </div>
+
       </div>
-    </article>`;
+    </div>`;
 }
 
 // ── Read state ─────────────────────────────────────────────────────────────
@@ -982,7 +1118,10 @@ function markAsRead(url) {
 function applyReadState() {
   const read = getReadSet();
   grid.querySelectorAll('.card[data-url]').forEach(card => {
-    if (read.has(card.dataset.url)) card.classList.add('read');
+    if (read.has(card.dataset.url)) {
+      card.classList.add('read');
+      card.closest('.card-scene')?.classList.add('is-flipped');
+    }
   });
 }
 
@@ -1148,18 +1287,27 @@ function attachCardEventListeners() {
   grid.querySelectorAll('.card').forEach(card => {
     card.addEventListener('click', (e) => {
       if (e.target.closest('.btn-get-summary')) return;
-      
-      markAsRead(card.dataset.url);
+
+      const url = card.dataset.url;
+      markAsRead(url);
       card.classList.add('read');
-      window.open(card.dataset.url, '_blank');
+
+      // Flip la carte
+      const scene = card.closest('.card-scene');
+      if (scene) scene.classList.add('is-flipped');
+
+      window.open(url, '_blank');
     });
 
     card.addEventListener('keydown', (e) => {
       if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('.btn-get-summary')) {
         e.preventDefault();
-        markAsRead(card.dataset.url);
+        const url = card.dataset.url;
+        markAsRead(url);
         card.classList.add('read');
-        window.open(card.dataset.url, '_blank');
+        const scene = card.closest('.card-scene');
+        if (scene) scene.classList.add('is-flipped');
+        window.open(url, '_blank');
       }
     });
   });
@@ -1168,7 +1316,7 @@ function attachCardEventListeners() {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      
+
       const item = {
         url:      btn.dataset.url,
         title:    btn.dataset.title,
@@ -1176,8 +1324,34 @@ function attachCardEventListeners() {
         date:     btn.dataset.date,
         is_video: btn.dataset.isVideo === '1',
       };
-      
+
       openModal(item);
+    });
+  });
+
+  // Bouton "Marquer non lu" sur le verso
+  grid.querySelectorAll('.btn-unread').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const url = btn.dataset.url;
+
+      // Retirer de localStorage
+      const read = getReadSet();
+      read.delete(url);
+      localStorage.setItem(READ_KEY, JSON.stringify([...read]));
+
+      // Défliper la scène
+      const scene = btn.closest('.card-scene');
+      if (scene) {
+        scene.classList.remove('is-flipped');
+        // Retirer la classe read de la card recto
+        const card = scene.querySelector('.card[data-url]');
+        if (card) card.classList.remove('read');
+      }
+
+      showToast('↩ Article marqué comme non lu');
     });
   });
 }
