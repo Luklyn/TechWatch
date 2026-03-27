@@ -373,9 +373,9 @@ select option:checked { background: #d0021b; color: #fff; }
 }
 
 /* ── Card ────────────────────────────────────────────────────────────────── */
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(14px); }
-  to   { opacity: 1; transform: translateY(0); }
+.card-scene {
+  min-height: 300px;
+  animation: fadeUp 0.35s ease both;
 }
 .card {
   background: var(--surface);
@@ -386,9 +386,14 @@ select option:checked { background: #d0021b; color: #fff; }
   flex-direction: column;
   position: relative;
   transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition), background-color var(--theme-transition);
-  min-height: 44px;
   cursor: pointer;
+  height: 100%;
 }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.card-scene { animation: fadeUp 0.35s ease both; }
 .card:hover, .card:focus {
   border-color: rgba(208,2,27,0.6);
   transform: translateY(-4px);
@@ -507,115 +512,13 @@ select option:checked { background: #d0021b; color: #fff; }
   outline-offset: 2px;
 }
 
-/* ── Card flip 3D ────────────────────────────────────────────────────────── */
-.card-scene {
-  perspective: 1000px;
-  border-radius: 12px;
-}
-.card-flip-inner {
-  width: 100%;
-  transform-style: preserve-3d;
-  transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  animation: fadeUp 0.35s ease both;
-}
-.card-scene.is-flipped .card-flip-inner {
-  transform: rotateY(180deg);
-}
-/* Recto : en flux normal, sa hauteur naturelle devient celle de la scene */
-.card-face-front {
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  border-radius: 12px;
-  width: 100%;
-}
-/* Verso : superposé, même taille que le recto */
-.card-face-back {
-  position: absolute;
-  inset: 0;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  border-radius: 12px;
-  overflow: hidden;
-  transform: rotateY(180deg);
-  background: var(--surface);
-  border: 1px solid var(--border);
-}
-.card-back-overlay {
-  position: absolute;
-  inset: 0;
-  background: color-mix(in srgb, var(--red) 8%, var(--surface) 92%);
-  border-radius: 12px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 18px;
-  padding: 24px;
-}
-.badge-lu {
-  background: var(--red);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 1.2px;
-  text-transform: uppercase;
-  padding: 6px 18px;
-  border-radius: 20px;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  box-shadow: 0 4px 14px rgba(208, 2, 27, 0.4);
-}
-.badge-lu-check {
-  width: 14px; height: 14px;
-  border-radius: 50%;
-  border: 2px solid rgba(255,255,255,0.7);
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-}
-.badge-lu-check::after {
-  content: '';
-  display: block;
-  width: 5px; height: 3px;
-  border-left: 2px solid #fff;
-  border-bottom: 2px solid #fff;
-  transform: rotate(-45deg) translateY(-1px);
-}
-.back-article-title {
-  color: var(--text);
-  font-size: 12.5px;
-  font-weight: 500;
-  text-align: center;
-  line-height: 1.45;
-  opacity: 0.75;
-  max-width: 200px;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.btn-unread {
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text-secondary);
-  font-family: var(--font-sans);
-  font-size: 11.5px;
-  font-weight: 600;
-  padding: 9px 18px;
-  cursor: pointer;
-  transition: background var(--transition), border-color var(--transition), color var(--transition);
-  letter-spacing: 0.2px;
-  min-height: 36px;
-}
-.btn-unread:hover { color: var(--red); border-color: var(--red); background: var(--red-glow); }
-.btn-unread:focus-visible { outline: 2px solid #4a90d9; outline-offset: 2px; }
-
-/* Read state — gere par le flip */
+/* Read state */
 .card.read {
-  transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition), background-color var(--theme-transition);
+  opacity: 0.6;
+  filter: grayscale(35%);
+  transition: opacity var(--transition), filter var(--transition), border-color var(--transition), transform var(--transition), box-shadow var(--transition), background-color var(--theme-transition);
 }
+.card.read:hover { opacity: 0.85; filter: grayscale(0%); }
 
 /* ── Skeleton ────────────────────────────────────────────────────────────── */
 .skeleton {
@@ -1044,46 +947,49 @@ function cardHTML(item, idx) {
   const thumb = `<img class="card-thumb" src="${escHtml(imgUrl)}" alt="${escHtml(item.title)}" loading="lazy" onerror="this.closest('.card-thumb-wrap').innerHTML='<div class=\\'card-thumb-placeholder\\'>${item.is_video ? '▶' : '📰'}</div>'"/>`;
   const summary = item.summary
     ? `<p class="card-summary">${escHtml(item.summary)}</p>` : '';
-
-  // Hauteur dynamique estimée pour la scène (fixe pour garantir le flip)
+  const cardId = 'card-' + idx + '-' + Math.random().toString(36).slice(2,7);
   return `
-    <div class="card-scene" role="listitem">
-      <div class="card-flip-inner" style="animation-delay:${(idx % PAGE_SIZE) * 35}ms;">
-
-        <!-- Recto -->
-        <div class="card-face-front">
-          <article class="card"
-            data-url="${escHtml(item.link)}"
-            data-title="${escHtml(item.title)}"
-            data-source="${escHtml(item.source)}"
-            data-date="${escHtml(item.date_display)}"
-            data-is-video="${item.is_video ? '1' : '0'}"
-            tabindex="0"
-            aria-label="${escHtml(item.title)}">
+    <div class="card-scene" style="animation: fadeUp 0.35s ease both; animation-delay:${(idx % PAGE_SIZE) * 35}ms;">
+      <div class="card-3d" id="${cardId}">
+        <article class="card card-face card-front"
+          data-url="${escHtml(item.link)}"
+          data-title="${escHtml(item.title)}"
+          data-source="${escHtml(item.source)}"
+          data-date="${escHtml(item.date_display)}"
+          data-is-video="${item.is_video ? '1' : '0'}"
+          data-card-id="${cardId}"
+          role="listitem"
+          tabindex="0"
+          aria-label="${escHtml(item.title)}">
+          <div class="card-thumb-wrap">${thumb}</div>
+          <div class="card-body">
+            <span class="card-source">${escHtml(item.source)}</span>
+            <h2 class="card-title">${escHtml(item.title)}</h2>
+            ${summary}
+            <div class="card-footer">
+              <span class="card-date">📅 ${item.date_display}</span>
+              <button class="btn-mark-read" data-card-id="${cardId}" aria-label="Marquer comme lu">✓ Lu</button>
+              <button class="btn-get-summary" data-url="${escHtml(item.link)}" data-title="${escHtml(item.title)}" data-source="${escHtml(item.source)}" data-date="${escHtml(item.date_display)}" data-is-video="${item.is_video ? '1' : '0'}">
+                ✦ Résumé IA
+              </button>
+            </div>
+          </div>
+        </article>
+        <div class="card-face card-back-face">
+          <div class="card-back-blur-layer">
             <div class="card-thumb-wrap">${thumb}</div>
             <div class="card-body">
               <span class="card-source">${escHtml(item.source)}</span>
               <h2 class="card-title">${escHtml(item.title)}</h2>
-              ${summary}
-              <div class="card-footer">
-                <span class="card-date">📅 ${item.date_display}</span>
-                <button class="btn-get-summary" data-url="${escHtml(item.link)}" data-title="${escHtml(item.title)}" data-source="${escHtml(item.source)}" data-date="${escHtml(item.date_display)}" data-is-video="${item.is_video ? '1' : '0'}">
-                  ✦ Résumé IA
-                </button>
-              </div>
             </div>
-          </article>
-        </div>
-
-        <!-- Verso -->
-        <div class="card-face-back">
-          <div class="card-back-overlay">
-            <div class="badge-lu"><span class="badge-lu-check"></span> Lu</div>
-            <p class="back-article-title">${escHtml(item.title)}</p>
-            <button class="btn-unread" data-url="${escHtml(item.link)}" aria-label="Marquer comme non lu">↩ Marquer non lu</button>
+          </div>
+          <div class="card-back-content">
+            <span class="read-badge">✓ Lu</span>
+            <span class="card-back-source">${escHtml(item.source)} · ${item.date_display}</span>
+            <span class="card-back-title">${escHtml(item.title)}</span>
+            <button class="btn-unread" data-card-id="${cardId}" aria-label="Marquer comme non lu">↩ Marquer comme non lu</button>
           </div>
         </div>
-
       </div>
     </div>`;
 }
@@ -1101,10 +1007,14 @@ function markAsRead(url) {
 }
 function applyReadState() {
   const read = getReadSet();
-  grid.querySelectorAll('.card[data-url]').forEach(card => {
-    if (read.has(card.dataset.url)) {
-      card.classList.add('read');
-      card.closest('.card-scene')?.classList.add('is-flipped');
+  grid.querySelectorAll('.card-front[data-url]').forEach(article => {
+    if (read.has(article.dataset.url)) {
+      article.classList.add('read');
+      const cardId = article.dataset.cardId;
+      if (cardId) {
+        const card3d = document.getElementById(cardId);
+        if (card3d) card3d.classList.add('flipped');
+      }
     }
   });
 }
@@ -1268,30 +1178,19 @@ function closeModal() {
 
 // ── Attach event listeners to cards ─────────────────────────────────────────
 function attachCardEventListeners() {
-  grid.querySelectorAll('.card').forEach(card => {
+  grid.querySelectorAll('.card-front').forEach(card => {
     card.addEventListener('click', (e) => {
-      if (e.target.closest('.btn-get-summary')) return;
-
-      const url = card.dataset.url;
-      markAsRead(url);
+      if (e.target.closest('.btn-get-summary') || e.target.closest('.btn-mark-read')) return;
+      markAsRead(card.dataset.url);
       card.classList.add('read');
-
-      // Flip la carte
-      const scene = card.closest('.card-scene');
-      if (scene) scene.classList.add('is-flipped');
-
-      window.open(url, '_blank');
+      window.open(card.dataset.url, '_blank');
     });
-
     card.addEventListener('keydown', (e) => {
-      if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('.btn-get-summary')) {
+      if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('.btn-get-summary') && !e.target.closest('.btn-mark-read')) {
         e.preventDefault();
-        const url = card.dataset.url;
-        markAsRead(url);
+        markAsRead(card.dataset.url);
         card.classList.add('read');
-        const scene = card.closest('.card-scene');
-        if (scene) scene.classList.add('is-flipped');
-        window.open(url, '_blank');
+        window.open(card.dataset.url, '_blank');
       }
     });
   });
@@ -1300,7 +1199,6 @@ function attachCardEventListeners() {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-
       const item = {
         url:      btn.dataset.url,
         title:    btn.dataset.title,
@@ -1308,34 +1206,34 @@ function attachCardEventListeners() {
         date:     btn.dataset.date,
         is_video: btn.dataset.isVideo === '1',
       };
-
       openModal(item);
     });
   });
 
-  // Bouton "Marquer non lu" sur le verso
+  grid.querySelectorAll('.btn-mark-read').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const card3d = document.getElementById(btn.dataset.cardId);
+      if (!card3d) return;
+      card3d.classList.add('flipped');
+      const article = card3d.querySelector('.card-front');
+      if (article) { markAsRead(article.dataset.url); article.classList.add('read'); }
+    });
+  });
+
   grid.querySelectorAll('.btn-unread').forEach(btn => {
     btn.addEventListener('click', (e) => {
-      e.preventDefault();
       e.stopPropagation();
-
-      const url = btn.dataset.url;
-
-      // Retirer de localStorage
-      const read = getReadSet();
-      read.delete(url);
-      localStorage.setItem(READ_KEY, JSON.stringify([...read]));
-
-      // Défliper la scène
-      const scene = btn.closest('.card-scene');
-      if (scene) {
-        scene.classList.remove('is-flipped');
-        // Retirer la classe read de la card recto
-        const card = scene.querySelector('.card[data-url]');
-        if (card) card.classList.remove('read');
+      const card3d = document.getElementById(btn.dataset.cardId);
+      if (!card3d) return;
+      card3d.classList.remove('flipped');
+      const article = card3d.querySelector('.card-front');
+      if (article) {
+        article.classList.remove('read');
+        const read = getReadSet();
+        read.delete(article.dataset.url);
+        localStorage.setItem(READ_KEY, JSON.stringify([...read].slice(-500)));
       }
-
-      showToast('↩ Article marqué comme non lu');
     });
   });
 }
