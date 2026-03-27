@@ -28,8 +28,7 @@
   --font-serif:      'DM Serif Display', serif;
   --radius:          10px;
   --transition:      250ms ease;
-  /* Transition progressive pour le changement de thème */
-  --theme-transition: 1.8s cubic-bezier(0.4, 0, 0.2, 1);
+  --theme-transition: 1.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ── Design tokens — Light ───────────────────────────────────────────────── */
@@ -91,7 +90,6 @@ body {
   font-family: var(--font-sans);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
-  /* Transition progressive sur tous les éléments */
   transition: background-color var(--theme-transition), color var(--theme-transition);
 }
 
@@ -359,24 +357,6 @@ select option:checked { background: #d0021b; color: #fff; }
   transition: background-color var(--theme-transition), color var(--theme-transition), border-color var(--theme-transition);
 }
 
-/* ── Loading state ───────────────────────────────────────────────────────── */
-.loading-message {
-  grid-column: 1 / -1;
-  text-align: center;
-  padding: 40px 20px;
-  color: var(--muted);
-}
-.loading-spinner {
-  display: inline-block;
-  width: 32px;
-  height: 32px;
-  border: 3px solid var(--surface2);
-  border-top-color: var(--red);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin-bottom: 16px;
-}
-
 /* ── Grid ────────────────────────────────────────────────────────────────── */
 .grid {
   display: grid;
@@ -398,10 +378,10 @@ select option:checked { background: #d0021b; color: #fff; }
   display: flex;
   flex-direction: column;
   position: relative;
-  cursor: pointer;
   transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition), background-color var(--theme-transition);
   animation: fadeUp 0.35s ease both;
   min-height: 44px;
+  cursor: pointer;
 }
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(14px); }
@@ -417,7 +397,6 @@ select option:checked { background: #d0021b; color: #fff; }
   outline: 2px solid #4a90d9;
   outline-offset: 2px;
 }
-.card-link { display: none; }
 
 /* Thumb */
 .card-thumb-wrap {
@@ -447,7 +426,7 @@ select option:checked { background: #d0021b; color: #fff; }
 
 /* Body */
 .card-body {
-  padding: 14px 16px 16px;
+  padding: 14px 16px;
   display: flex; flex-direction: column;
   gap: 7px; flex: 1;
 }
@@ -479,9 +458,11 @@ select option:checked { background: #d0021b; color: #fff; }
 }
 .card-footer {
   display: flex; align-items: center;
+  gap: 8px;
   border-top: 1px solid var(--border);
   padding-top: 10px; margin-top: 4px;
   transition: border-color var(--theme-transition);
+  flex-wrap: wrap;
 }
 .card-date {
   font-size: 13px;
@@ -495,23 +476,32 @@ select option:checked { background: #d0021b; color: #fff; }
   margin-left: auto;
   transition: color var(--theme-transition);
 }
-.card-read-indicator {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 20px;
-  height: 20px;
-  background: rgba(208, 2, 27, 0.3);
-  border: 1px solid var(--red);
-  border-radius: 50%;
-  display: flex;
+
+/* Button "Obtenir un résumé" */
+.btn-get-summary {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  font-size: 12px;
+  gap: 6px;
+  padding: 8px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+.btn-get-summary:hover {
   color: var(--red);
-  opacity: 0;
-  transition: opacity var(--transition);
-  pointer-events: none;
+  border-color: var(--red);
+  background: rgba(208,2,27,0.05);
+}
+.btn-get-summary:focus-visible {
+  outline: 2px solid #4a90d9;
+  outline-offset: 2px;
 }
 
 /* Read state */
@@ -521,7 +511,6 @@ select option:checked { background: #d0021b; color: #fff; }
   transition: opacity var(--transition), filter var(--transition), border-color var(--transition), transform var(--transition), box-shadow var(--transition), background-color var(--theme-transition);
 }
 .card.read:hover { opacity: 0.85; filter: grayscale(0%); }
-.card.read .card-read-indicator { opacity: 1; }
 
 /* ── Skeleton ────────────────────────────────────────────────────────────── */
 .skeleton {
@@ -690,6 +679,38 @@ select option:checked { background: #d0021b; color: #fff; }
 }
 .btn-original:hover { background: #b00018; transform: translateY(-1px); }
 .btn-original:focus-visible { outline: 2px solid #4a90d9; outline-offset: 2px; }
+
+/* Button TTS */
+.btn-tts {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px;
+  padding: 0;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 18px;
+  cursor: pointer;
+  transition: all var(--transition);
+  flex-shrink: 0;
+}
+.btn-tts:hover {
+  color: var(--red);
+  border-color: var(--red);
+  background: rgba(208,2,27,0.05);
+}
+.btn-tts:focus-visible { outline: 2px solid #4a90d9; outline-offset: 2px; }
+.btn-tts.playing { color: var(--red); border-color: var(--red); }
+.btn-tts.playing::after {
+  content: '';
+  display: inline-block;
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--red);
+  margin-left: 6px;
+  animation: pulse 1s ease-in-out infinite;
+}
+
 .btn-close-modal {
   padding: 10px 16px; min-height: 44px;
   background: var(--surface2);
@@ -784,12 +805,12 @@ select option:checked { background: #d0021b; color: #fff; }
       <!-- Meta -->
       <div class="meta-bar">
         <span class="count-badge" id="count" aria-live="polite">Chargement…</span>
-        <button class="btn-refresh" id="btn-refresh" aria-label="Actualiser les flux (Ctrl+R)">
+        <button class="btn-refresh" id="btn-refresh" aria-label="Actualiser les flux">
           <span class="refresh-icon" aria-hidden="true">↻</span> <span class="refresh-text">Actualiser</span>
         </button>
         <span class="last-update" id="last-update" aria-live="polite"></span>
       </div>
-    </div><!-- /toolbar-sticky -->
+    </div>
 
     <!-- Errors -->
     <div id="errors" role="alert" aria-live="assertive"></div>
@@ -824,9 +845,12 @@ select option:checked { background: #d0021b; color: #fff; }
       <p class="modal-summary loading" id="modal-summary">Analyse en cours…</p>
     </div>
     <div class="modal-footer">
-      <a class="btn-original" id="modal-link" href="#" target="_blank" rel="noopener noreferrer">
-        ↗ Lire l'article original
-      </a>
+      <div style="display: flex; gap: 12px; align-items: center;">
+        <a class="btn-original" id="modal-link" href="#" target="_blank" rel="noopener noreferrer">
+          ↗ Lire l'article
+        </a>
+        <button class="btn-tts" id="btn-tts" aria-label="Écouter le résumé" title="Écouter le résumé">🔊</button>
+      </div>
       <button class="btn-close-modal" id="btn-close-modal">Fermer</button>
     </div>
   </div>
@@ -840,7 +864,8 @@ let allItems      = [];
 let displayedCount = 0;
 const PAGE_SIZE    = 20;
 let loadTimeout    = null;
-const LOAD_TIMEOUT_MS = 5000; // 5 secondes max
+const LOAD_TIMEOUT_MS = 5000;
+let currentSpeechUtterance = null;
 
 // ── DOM refs ───────────────────────────────────────────────────────────────
 const grid          = document.getElementById('grid');
@@ -862,6 +887,7 @@ const modalSummary  = document.getElementById('modal-summary');
 const modalLink     = document.getElementById('modal-link');
 const aiDot         = document.getElementById('ai-dot');
 const btnClose      = document.getElementById('btn-close-modal');
+const btnTTS        = document.getElementById('btn-tts');
 const btnFilterToggle = document.getElementById('btn-filter-toggle');
 const toolbarFilters  = document.getElementById('toolbar-filters');
 
@@ -922,14 +948,15 @@ function cardHTML(item, idx) {
       tabindex="0"
       aria-label="${escHtml(item.title)}">
       <div class="card-thumb-wrap">${thumb}</div>
-      <div class="card-read-indicator">✓</div>
       <div class="card-body">
         <span class="card-source">${escHtml(item.source)}</span>
         <h2 class="card-title">${escHtml(item.title)}</h2>
         ${summary}
         <div class="card-footer">
           <span class="card-date">📅 ${item.date_display}</span>
-          <span class="card-ai-badge" aria-hidden="true">✦ Résumé IA</span>
+          <button class="btn-get-summary" data-url="${escHtml(item.link)}" data-title="${escHtml(item.title)}" data-source="${escHtml(item.source)}" data-date="${escHtml(item.date_display)}" data-is-video="${item.is_video ? '1' : '0'}">
+            ✦ Résumé IA
+          </button>
         </div>
       </div>
     </article>`;
@@ -963,6 +990,7 @@ function appendItems(items) {
   });
   grid.appendChild(frag);
   applyReadState();
+  attachCardEventListeners();
 }
 
 function loadMore() {
@@ -977,6 +1005,60 @@ const observer = new IntersectionObserver(entries => {
 }, { rootMargin: '300px' });
 observer.observe(sentinel);
 
+// ── TTS Web Speech API ──────────────────────────────────────────────────────
+function speakText(text) {
+  if (!('speechSynthesis' in window)) {
+    showToast('❌ La synthèse vocale n\'est pas supportée par votre navigateur.');
+    return;
+  }
+
+  // Arrêter la parole en cours
+  speechSynthesis.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'fr-FR';
+  utterance.rate = 1;
+  utterance.pitch = 1;
+  utterance.volume = 1;
+
+  currentSpeechUtterance = utterance;
+
+  utterance.onstart = () => {
+    btnTTS.classList.add('playing');
+    btnTTS.setAttribute('aria-label', 'Pause (lecture en cours)');
+  };
+
+  utterance.onend = () => {
+    btnTTS.classList.remove('playing');
+    btnTTS.setAttribute('aria-label', 'Écouter le résumé');
+  };
+
+  utterance.onerror = () => {
+    showToast('❌ Erreur lors de la lecture audio.');
+    btnTTS.classList.remove('playing');
+  };
+
+  speechSynthesis.speak(utterance);
+}
+
+function toggleTTS() {
+  if (speechSynthesis.paused) {
+    speechSynthesis.resume();
+    btnTTS.classList.add('playing');
+  } else if (speechSynthesis.speaking) {
+    speechSynthesis.pause();
+    btnTTS.classList.remove('playing');
+  } else {
+    const text = modalSummary.textContent;
+    speakText(text);
+  }
+}
+
+btnTTS.addEventListener('click', (e) => {
+  e.stopPropagation();
+  toggleTTS();
+});
+
 // ── Modal avec gestion du focus ────────────────────────────────────────────
 let previouslyFocused = null;
 
@@ -988,9 +1070,6 @@ function openModal(item) {
   modalMeta.textContent   = `📅 ${item.date}`;
   modalLink.href          = item.url;
   modalLink.setAttribute('rel', 'noopener noreferrer');
-  modalLink.innerHTML     = item.is_video
-    ? '▶ Voir la vidéo sur YouTube'
-    : '↗ Lire l\'article original';
 
   modalSummary.textContent = 'Analyse en cours…';
   modalSummary.classList.add('loading');
@@ -999,11 +1078,13 @@ function openModal(item) {
   backdrop.classList.add('open');
   document.body.style.overflow = 'hidden';
   
-  // Focus le lien principal
   setTimeout(() => modalLink.focus(), 250);
 
-  // Limiter la tabulation au modal
   backdrop.addEventListener('keydown', handleModalKeydown);
+
+  // Arrêter toute lecture en cours
+  speechSynthesis.cancel();
+  btnTTS.classList.remove('playing');
 
   fetch('/api/summarize', {
     method: 'POST',
@@ -1049,37 +1130,58 @@ function closeModal() {
   backdrop.classList.remove('open');
   document.body.style.overflow = '';
   backdrop.removeEventListener('keydown', handleModalKeydown);
+  speechSynthesis.cancel();
+  btnTTS.classList.remove('playing');
   
-  // Restaurer le focus
   if (previouslyFocused) {
     previouslyFocused.focus();
   }
 }
 
-// Delegate card clicks + keyboard
-function handleCardActivation(card) {
-  markAsRead(card.dataset.url);
-  card.classList.add('read');
-  openModal({
-    url:      card.dataset.url,
-    title:    card.dataset.title,
-    source:   card.dataset.source,
-    date:     card.dataset.date,
-    is_video: card.dataset.isVideo === '1',
+// ── Attach event listeners to cards ─────────────────────────────────────────
+function attachCardEventListeners() {
+  // Click sur le card ouvre l'article original
+  grid.querySelectorAll('.card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      // Ne pas ouvrir si on clique sur le bouton résumé
+      if (e.target.closest('.btn-get-summary')) return;
+      
+      markAsRead(card.dataset.url);
+      card.classList.add('read');
+      window.open(card.dataset.url, '_blank');
+    });
+
+    // Keyboard navigation sur le card
+    card.addEventListener('keydown', (e) => {
+      if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('.btn-get-summary')) {
+        e.preventDefault();
+        markAsRead(card.dataset.url);
+        card.classList.add('read');
+        window.open(card.dataset.url, '_blank');
+      }
+    });
+  });
+
+  // Click sur le bouton "Résumé IA"
+  grid.querySelectorAll('.btn-get-summary').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const item = {
+        url:      btn.dataset.url,
+        title:    btn.dataset.title,
+        source:   btn.dataset.source,
+        date:     btn.dataset.date,
+        is_video: btn.dataset.isVideo === '1',
+      };
+      
+      markAsRead(item.url);
+      btn.closest('.card').classList.add('read');
+      openModal(item);
+    });
   });
 }
-
-grid.addEventListener('click', e => {
-  const card = e.target.closest('.card');
-  if (card) handleCardActivation(card);
-});
-
-grid.addEventListener('keydown', e => {
-  if (e.key === 'Enter' || e.key === ' ') {
-    const card = e.target.closest('.card');
-    if (card) { e.preventDefault(); handleCardActivation(card); }
-  }
-});
 
 btnClose.addEventListener('click', closeModal);
 backdrop.addEventListener('click', e => { if (e.target === backdrop) closeModal(); });
@@ -1102,7 +1204,6 @@ async function load(forceRefresh = false) {
     refresh: forceRefresh ? '1' : '0',
   });
 
-  // Timeout après 5 secondes
   loadTimeout = setTimeout(() => {
     grid.innerHTML = `
       <div class="state">
@@ -1197,7 +1298,6 @@ searchEl.addEventListener('input', () => {
   clearTimeout(debounceTimer);
   debounceTimer = setTimeout(() => {
     const value = searchEl.value.trim();
-    // Minimum 2 caractères pour valider une recherche
     if (value.length === 0 || value.length >= 2) {
       state.search = value;
       load();
@@ -1218,7 +1318,6 @@ if (saved === 'light') {
   btnTheme.setAttribute('aria-label', 'Basculer le thème clair/sombre (actuellement clair)');
 }
 btnTheme.addEventListener('click', () => {
-  // Ajouter l'animation de rotation
   btnTheme.classList.add('rotating');
   
   const isLight = document.body.classList.toggle('light');
@@ -1226,7 +1325,6 @@ btnTheme.addEventListener('click', () => {
   btnTheme.setAttribute('aria-label', `Basculer le thème clair/sombre (actuellement ${isLight ? 'clair' : 'sombre'})`);
   localStorage.setItem('theme', isLight ? 'light' : 'dark');
   
-  // Retirer la classe d'animation après qu'elle soit terminée
   setTimeout(() => btnTheme.classList.remove('rotating'), 1200);
 });
 
