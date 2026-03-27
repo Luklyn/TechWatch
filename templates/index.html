@@ -367,6 +367,7 @@ select option:checked { background: #d0021b; color: #fff; }
   gap: 20px;
   padding-bottom: 80px;
   margin-top: 20px;
+  align-items: start;
 }
 @media (min-width: 640px) {
   .grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
@@ -388,7 +389,6 @@ select option:checked { background: #d0021b; color: #fff; }
   transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition), background-color var(--theme-transition);
   min-height: 44px;
   cursor: pointer;
-  height: 100%;
 }
 .card:hover, .card:focus {
   border-color: rgba(208,2,27,0.6);
@@ -512,7 +512,6 @@ select option:checked { background: #d0021b; color: #fff; }
 .card-scene {
   perspective: 1000px;
   border-radius: 12px;
-  animation: fadeUp 0.35s ease both;
   position: relative;
 }
 .card-flip-inner {
@@ -520,6 +519,7 @@ select option:checked { background: #d0021b; color: #fff; }
   transform-style: preserve-3d;
   transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
+  animation: fadeUp 0.35s ease both;
 }
 .card-scene.is-flipped .card-flip-inner {
   transform: rotateY(180deg);
@@ -1059,8 +1059,8 @@ function cardHTML(item, idx) {
 
   // Hauteur dynamique estimée pour la scène (fixe pour garantir le flip)
   return `
-    <div class="card-scene" style="animation-delay:${(idx % PAGE_SIZE) * 35}ms;" role="listitem">
-      <div class="card-flip-inner">
+    <div class="card-scene" role="listitem">
+      <div class="card-flip-inner" style="animation-delay:${(idx % PAGE_SIZE) * 35}ms;">
 
         <!-- Recto -->
         <div class="card-face-front">
