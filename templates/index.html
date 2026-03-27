@@ -3,372 +3,76 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Revue de presse tech : agrégateur d'actualités technologiques avec résumés IA">
 <title>Ma revue de presse tech</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* ── Reset ───────────────────────────────────────────────────────────────── */
+/* ── Reset & Variables (Identiques à ton index 5) ────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-/* ── Design tokens — Dark (défaut) ──────────────────────────────────────── */
 :root {
-  --bg:              #121212;
-  --surface:         #1e1e1e;
-  --surface2:        #2a2a2a;
-  --border:          rgba(255,255,255,0.07);
-  --red:             #d0021b;
-  --red-glow:        rgba(208,2,27,0.18);
-  --text:            #e8e8e8;
-  --text-secondary:  #aaaaaa;
-  --muted:           #666;
-  --dim:             #3a3a3a;
-  --font-sans:       'DM Sans', sans-serif;
-  --font-serif:      'DM Serif Display', serif;
-  --radius:          12px;
-  --transition:      240ms cubic-bezier(0.4, 0, 0.2, 1);
+  --bg: #121212; --surface: #1e1e1e; --surface2: #2a2a2a;
+  --border: rgba(255,255,255,0.07); --red: #d0021b; --red-glow: rgba(208,2,27,0.18);
+  --text: #e8e8e8; --text-secondary: #aaaaaa; --muted: #666;
+  --font-sans: 'DM Sans', sans-serif; --font-serif: 'DM Serif Display', serif;
+  --radius: 10px; --transition: 250ms ease;
 }
-
-/* ── Design tokens — Light ───────────────────────────────────────────────── */
 body.light {
-  --bg:              #f7f7f5;
-  --surface:         #ffffff;
-  --surface2:        #f0f0ee;
-  --border:          rgba(0,0,0,0.08);
-  --red:             #d0021b;
-  --red-glow:        rgba(208,2,27,0.12);
-  --text:            #121212;
-  --text-secondary:  #444444;
-  --muted:           #777;
-  --dim:             #ccc;
+  --bg: #f4f4f2; --surface: #ffffff; --surface2: #ebebeb;
+  --border: rgba(0,0,0,0.08); --text: #111111; --text-secondary: #666666;
 }
 
-/* ── Base ────────────────────────────────────────────────────────────────── */
-html { scroll-behavior: smooth; }
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-sans);
-  min-height: 100vh;
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-}
-.wrapper { max-width: 1440px; margin: 0 auto; padding: 0 24px; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-sans); min-height: 100vh; transition: background-color 0.5s; }
+.wrapper { max-width: 1400px; margin: 0 auto; padding: 0 24px; }
 
-/* ── Header ──────────────────────────────────────────────────────────────── */
-header {
-  border-bottom: 1px solid var(--border);
-  padding: 32px 0 24px;
-  margin-bottom: 32px;
-}
-.header-inner {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 24px;
-  flex-wrap: wrap;
-}
-.logo { display: flex; flex-direction: column; gap: 4px; }
-.logo-eyebrow {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--red);
-}
-.logo-title {
-  font-family: var(--font-serif);
-  font-size: 2.5rem;
-  color: var(--text);
-  line-height: 1;
-}
+/* ── Header & Toolbar ───────────────────────────────────────────────────── */
+header { border-bottom: 1px solid var(--border); padding: 20px 0; margin-bottom: 24px; }
+.header-inner { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.logo-title { font-family: var(--font-serif); font-size: 1.9rem; }
 
-/* Tabs */
-.tabs {
-  display: flex;
-  gap: 6px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 4px;
-}
-.tab {
-  padding: 10px 22px;
-  border-radius: 7px;
-  border: none;
-  background: transparent;
-  color: var(--text-secondary);
-  font-family: var(--font-sans);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: all var(--transition);
-}
-.tab.active { background: var(--red); color: #fff; box-shadow: 0 4px 12px var(--red-glow); }
-.tab:not(.active):hover { color: var(--text); background: rgba(255,255,255,0.05); }
+.tabs { display: flex; gap: 4px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 4px; }
+.tab { padding: 8px 16px; border-radius: 6px; border: none; background: transparent; color: var(--muted); font-weight: 700; cursor: pointer; text-transform: uppercase; font-size: 11px; }
+.tab.active { background: var(--red); color: #fff; }
 
-/* ── Toolbar ─────────────────────────────────────────────────────────────── */
-.toolbar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 0;
-}
-.search-wrap { position: relative; flex: 1; }
-.search-icon {
-  position: absolute;
-  left: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--muted);
-  font-size: 14px;
-  pointer-events: none;
-}
-input[type="text"], select {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  color: var(--text);
-  font-family: var(--font-sans);
-  font-size: 14px;
-  padding: 12px 16px;
-  outline: none;
-  transition: border-color var(--transition), box-shadow var(--transition);
-  width: 100%;
-  height: 48px;
-}
-input[type="text"] { padding-left: 42px; }
-input[type="text"]:focus, select:focus {
-  border-color: var(--red);
-  box-shadow: 0 0 0 4px var(--red-glow);
-}
-select {
-  cursor: pointer;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8.5L1.5 4h9L6 8.5z'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 16px center;
-  padding-right: 44px;
-  width: auto;
-  min-width: 180px;
-}
+.toolbar { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; }
+input[type="text"], select { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 10px; border-radius: var(--radius); height: 44px; outline: none; }
+#search { flex: 1; }
 
-.btn-theme, .btn-refresh {
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all var(--transition);
-}
-.btn-theme { width: 48px; font-size: 18px; flex-shrink: 0; }
-.btn-refresh { padding: 0 20px; font-size: 13px; font-weight: 600; gap: 8px; white-space: nowrap; }
-.btn-theme:hover, .btn-refresh:hover { border-color: var(--red); color: var(--red); }
-.btn-refresh.spinning .refresh-icon { animation: spin 0.8s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
+/* ── Grid & Cards ───────────────────────────────────────────────────────── */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding-bottom: 50px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: all 0.3s ease; cursor: pointer; }
+.card:hover { transform: translateY(-5px); border-color: var(--red); }
+.card.read { opacity: 0.6; filter: grayscale(0.4); }
 
-/* ── Meta & Info ─────────────────────────────────────────────────────────── */
-.meta-bar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 20px 0 24px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid var(--border);
-}
-.count-badge {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-secondary);
-  background: var(--surface2);
-  border-radius: 30px;
-  padding: 4px 14px;
-}
-.last-update { font-size: 12px; color: var(--muted); margin-left: auto; }
+.card-thumb-wrap { width: 100%; aspect-ratio: 16/9; background: var(--surface2); overflow: hidden; }
+.card-thumb { width: 100%; height: 100%; object-fit: cover; }
+.card-body { padding: 15px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.card-source { font-size: 10px; color: var(--red); font-weight: 700; text-transform: uppercase; }
+.card-title { font-size: 14px; font-weight: 600; line-height: 1.4; }
+.card-footer { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 10px; margin-top: auto; }
+.card-date { font-size: 12px; color: var(--muted); }
 
-/* ── Grid ────────────────────────────────────────────────────────────────── */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 28px;
-}
-
-/* ── Card ────────────────────────────────────────────────────────────────── */
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  transition: all var(--transition);
-  animation: fadeUp 0.4s ease both;
-}
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.card:hover {
-  border-color: rgba(208,2,27,0.4);
-  transform: translateY(-6px);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-}
-
-.card.read { opacity: 0.6; filter: grayscale(0.5); }
-.card.read:hover { opacity: 1; filter: grayscale(0); }
-
-.card-thumb-container { position: relative; width: 100%; height: 180px; overflow: hidden; background: var(--surface2); }
-.card-thumb { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease; }
-.card:hover .card-thumb { transform: scale(1.06); }
-.card-thumb-placeholder {
-  width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
-  font-size: 40px; opacity: 0.2;
-}
-
-.card-body { padding: 20px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
-.card-source { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--red); }
-.card-title {
-  font-size: 1.05rem; font-weight: 700; line-height: 1.4; color: var(--text);
-  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
-}
-.card-summary {
-  font-size: 13px; color: var(--text-secondary); line-height: 1.6;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-}
-
-.card-footer {
-  display: flex;
-  align-items: center;
-  border-top: 1px solid var(--border);
-  padding: 16px 20px;
-  background: rgba(255,255,255,0.01);
-}
-.card-date { font-size: 11px; color: var(--muted); }
-
-/* BOUTON GLOSSY DYNAMIQUE */
+/* ── BOUTON GLOSSY DYNAMIQUE ────────────────────────────────────────────── */
 .btn-get-summary {
-  position: relative;
-  overflow: hidden;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 34px;
-  padding: 0 14px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  color: var(--text-secondary);
-  font-family: var(--font-sans);
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all var(--transition);
-  margin-left: auto;
+  position: relative; overflow: hidden; height: 34px; padding: 0 15px;
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
+  color: var(--text-secondary); font-size: 11px; font-weight: 700; cursor: pointer;
 }
-
-.btn-get-summary .btn-text-wrapper {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.btn-get-summary span {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  white-space: nowrap;
-}
-
-/* Effet Glossy */
+.btn-text-wrapper { display: flex; flex-direction: column; transition: transform 0.3s; height: 100%; }
+.btn-text-wrapper span { height: 100%; display: flex; align-items: center; justify-content: center; white-space: nowrap; }
+.btn-get-summary:hover .btn-text-wrapper { transform: translateY(-100%); }
+.btn-get-summary:hover { border-color: var(--red); color: var(--red); }
 .btn-get-summary::after {
-  content: "";
-  position: absolute;
-  top: -50%;
-  left: -100%;
-  width: 40px;
-  height: 200%;
-  background: rgba(255, 255, 255, 0.15);
-  transform: rotate(25deg);
+  content: ""; position: absolute; top: -50%; left: -100%; width: 40px; height: 200%;
+  background: rgba(255,255,255,0.1); transform: rotate(25deg); transition: left 0.5s;
 }
+.btn-get-summary:hover::after { left: 150%; }
 
-.btn-get-summary:hover::after {
-  left: 150%;
-  transition: left 0.6s ease-in-out;
-}
-
-.btn-get-summary:hover {
-  color: var(--red);
-  border-color: var(--red);
-  background: var(--red-glow);
-}
-
-.btn-get-summary:hover .btn-text-wrapper {
-  transform: translateY(-100%);
-}
-
-/* ── States ──────────────────────────────────────────────────────────────── */
-.state { grid-column: 1 / -1; text-align: center; padding: 100px 24px; }
-.state-icon { font-size: 56px; margin-bottom: 20px; opacity: 0.5; }
-.state h3 { font-family: var(--font-serif); font-size: 1.8rem; margin-bottom: 12px; font-weight: 400; }
-.state p { color: var(--muted); max-width: 400px; margin: 0 auto; }
-
-/* ── Skeleton ────────────────────────────────────────────────────────────── */
-.sk-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; height: 380px; }
-.sk-anim {
-  background: linear-gradient(90deg, var(--surface) 25%, var(--surface2) 50%, var(--surface) 75%);
-  background-size: 200% 100%; animation: shimmer 1.5s infinite;
-}
+/* ── Modal & States ─────────────────────────────────────────────────────── */
+.modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(4px); }
+.modal-backdrop.open { display: flex; }
+.modal { background: var(--surface); padding: 30px; border-radius: 16px; width: 90%; max-width: 600px; border: 1px solid var(--border); }
+.skeleton { background: linear-gradient(90deg, var(--surface) 25%, var(--surface2) 50%, var(--surface) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; height: 200px; border-radius: 10px; }
 @keyframes shimmer { to { background-position: -200% 0; } }
-
-/* ── Modal ───────────────────────────────────────────────────────────────── */
-.modal-backdrop {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
-  z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px;
-  opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
-}
-.modal-backdrop.open { opacity: 1; pointer-events: all; }
-.modal {
-  background: var(--surface); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px;
-  width: 100%; max-width: 680px; max-height: 90vh; overflow: hidden;
-  display: flex; flex-direction: column; box-shadow: 0 40px 100px rgba(0,0,0,0.6);
-  transform: translateY(30px); transition: transform 0.3s ease;
-}
-.modal-backdrop.open .modal { transform: translateY(0); }
-
-.modal-header { padding: 32px 32px 24px; border-bottom: 1px solid var(--border); }
-.modal-source { font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--red); margin-bottom: 12px; display: block; }
-.modal-title { font-family: var(--font-serif); font-size: 1.75rem; line-height: 1.3; font-weight: 400; color: var(--text); }
-
-.modal-content { padding: 32px; overflow-y: auto; flex: 1; }
-.ai-badge {
-  display: inline-flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-secondary); margin-bottom: 20px;
-}
-.ai-pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--red); animation: pulse 1.5s infinite; }
-@keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.3); opacity: 0.5; } 100% { transform: scale(1); opacity: 1; } }
-
-.modal-summary { font-size: 1.05rem; line-height: 1.8; color: var(--text-secondary); }
-.modal-summary.loading { font-style: italic; opacity: 0.6; }
-
-.modal-footer {
-  padding: 24px 32px; border-top: 1px solid var(--border); background: rgba(0,0,0,0.05);
-  display: flex; align-items: center; justify-content: space-between; gap: 16px;
-}
-.btn-primary {
-  background: var(--red); color: white; border: none; padding: 12px 24px; border-radius: 8px;
-  font-weight: 700; font-size: 14px; text-decoration: none; transition: all 0.2s;
-}
-.btn-primary:hover { background: #e6001d; transform: translateY(-2px); box-shadow: 0 8px 20px var(--red-glow); }
-.btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); padding: 12px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s; }
-.btn-secondary:hover { background: var(--surface); border-color: var(--muted); }
 </style>
 </head>
 <body>
@@ -376,217 +80,134 @@ select {
 <div class="wrapper">
   <header>
     <div class="header-inner">
-      <div class="logo">
-        <span class="logo-eyebrow">The Tech Digest</span>
-        <h1 class="logo-title">Revue de presse</h1>
+      <h1 class="logo-title">Tech Watch</h1>
+      <div class="tabs">
+        <button class="tab active" data-type="articles">Articles</button>
+        <button class="tab" data-type="videos">Vidéos</button>
       </div>
-      <div style="display:flex; align-items:center; gap:12px;">
-        <div class="tabs">
-          <button class="tab active" data-type="articles">Articles</button>
-          <button class="tab" data-type="videos">Vidéos</button>
-        </div>
-        <button id="btn-theme" class="btn-theme" aria-label="Changer de thème">🌙</button>
-      </div>
+      <button id="btn-theme" style="background:none; border:none; cursor:pointer; font-size:20px;">🌙</button>
     </div>
   </header>
 
   <div class="toolbar">
-    <div class="search-wrap">
-      <span class="search-icon">🔍</span>
-      <input type="text" id="search" placeholder="Filtrer les actualités..." autocomplete="off">
-    </div>
-    <select id="filter-source"><option value="">Toutes les sources</option></select>
-    <select id="filter-period">
-      <option value="">Toutes les dates</option>
-      <option value="today">Aujourd'hui</option>
-      <option value="week">Cette semaine</option>
-      <option value="month">Ce mois</option>
-    </select>
-    <button id="btn-refresh" class="btn-refresh"><span class="refresh-icon">↻</span> Actualiser</button>
+    <input type="text" id="search" placeholder="Rechercher...">
+    <select id="filter-source"><option value="">Sources</option></select>
+    <button id="btn-refresh" style="background:var(--surface); border:1px solid var(--border); color:var(--text); padding:0 15px; border-radius:10px; cursor:pointer;">↻ Actualiser</button>
   </div>
 
-  <div class="meta-bar">
-    <span id="count" class="count-badge">— résultats</span>
-    <span id="last-update" class="last-update"></span>
-  </div>
-
-  <div id="errors"></div>
   <div id="grid" class="grid"></div>
+  <div id="sentinel"></div>
 </div>
 
 <div id="modal-backdrop" class="modal-backdrop">
   <div class="modal">
-    <div class="modal-header">
-      <span id="modal-source" class="modal-source"></span>
-      <h2 id="modal-title" class="modal-title"></h2>
-    </div>
-    <div class="modal-content">
-      <div class="ai-badge"><span class="ai-pulse"></span> Résumé par intelligence artificielle</div>
-      <p id="modal-summary" class="modal-summary loading">Génération du résumé en cours...</p>
-    </div>
-    <div class="modal-footer">
-      <a id="modal-link" href="#" target="_blank" class="btn-primary">Lire l'original</a>
-      <button id="btn-close" class="btn-secondary">Fermer</button>
-    </div>
+    <h2 id="modal-title" style="margin-bottom:15px; font-family:var(--font-serif);"></h2>
+    <p id="modal-summary" style="line-height:1.6; color:var(--text-secondary); margin-bottom:20px;"></p>
+    <button id="close-modal" style="background:var(--red); color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer;">Fermer</button>
   </div>
 </div>
 
 <script>
-const state = { type: 'articles', search: '', source: '', period: '' };
-let debounceTimer = null;
+const state = { type: 'articles', search: '', source: '', page: 1 };
+let allItems = [];
+let isLoading = false;
 
-const grid = document.getElementById('grid');
-const countBadge = document.getElementById('count');
-const lastUpdate = document.getElementById('last-update');
-const errorsEl = document.getElementById('errors');
-const searchEl = document.getElementById('search');
-const sourceEl = document.getElementById('filter-source');
-const periodEl = document.getElementById('filter-period');
-const refreshBtn = document.getElementById('btn-refresh');
-const backdrop = document.getElementById('modal-backdrop');
+async function loadFeed(force = false) {
+  if (isLoading) return;
+  isLoading = true;
+  const grid = document.getElementById('grid');
+  if (force) grid.innerHTML = '<div class="skeleton"></div>';
 
-function relativeTime(ts) {
-  const delta = Math.floor(Date.now() / 1000 - ts);
-  if (delta < 60) return "À l'instant";
-  if (delta < 3600) return `Il y a ${Math.floor(delta/60)} min`;
-  if (delta < 86400) return `Il y a ${Math.floor(delta/3600)}h`;
-  return `Il y a ${Math.floor(delta/86400)}j`;
+  try {
+    const params = new URLSearchParams({...state, refresh: force ? '1' : '0'});
+    const response = await fetch(`/api/feed?${params}`);
+    const data = await response.json();
+    
+    allItems = data.items;
+    renderCards();
+    
+    // Update sources
+    const sourceSelect = document.getElementById('filter-source');
+    sourceSelect.innerHTML = '<option value="">Toutes les sources</option>' + 
+      data.sources.map(s => `<option value="${s}">${s}</option>`).join('');
+  } catch (e) {
+    console.error("Erreur Render:", e);
+  } finally {
+    isLoading = false;
+  }
 }
 
-function cardHTML(item, idx) {
+function renderCards() {
+  const grid = document.getElementById('grid');
   const readList = JSON.parse(localStorage.getItem('read_articles') || '[]');
-  const isRead = readList.includes(item.link) ? ' read' : '';
   
-  const imgUrl = item.is_video ? item.image : `/api/img?url=${encodeURIComponent(item.image)}`;
-  const thumb = item.image 
-    ? `<img class="card-thumb" src="${imgUrl}" alt="" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\'card-thumb-placeholder\'>${item.is_video ? '▶' : '📰'}</div>'">`
-    : `<div class="card-thumb-placeholder">${item.is_video ? '▶' : '📰'}</div>`;
-
-  return `
-    <article class="card${isRead}" style="animation-delay:${idx*40}ms" data-url="${item.link}">
-      <div class="card-thumb-container">${thumb}</div>
+  grid.innerHTML = allItems.map((item, idx) => `
+    <article class="card ${readList.includes(item.link) ? 'read' : ''}" onclick="openArticle('${item.link}')">
+      <div class="card-thumb-wrap">
+        <img src="${item.image || ''}" class="card-thumb" onerror="this.src='https://via.placeholder.com/400x225?text=Tech'">
+      </div>
       <div class="card-body">
         <span class="card-source">${item.source}</span>
         <h2 class="card-title">${item.title}</h2>
-        ${item.summary ? `<p class="card-summary">${item.summary}</p>` : ''}
+        <div class="card-footer">
+          <span class="card-date">📅 ${item.date_display}</span>
+          <button class="btn-get-summary" onclick="event.stopPropagation(); getAISummary('${item.link}', '${item.title.replace(/'/g, "\\'")}')">
+            <div class="btn-text-wrapper">
+              <span>✦ Résumé IA</span>
+              <span>Lancer l'IA</span>
+            </div>
+          </button>
+        </div>
       </div>
-      <div class="card-footer">
-        <span class="card-date">📅 ${item.date_display}</span>
-        <button class="btn-get-summary">
-          <div class="btn-text-wrapper">
-            <span>✦ Résumé IA</span>
-            <span>Lancer l'IA</span>
-          </div>
-        </button>
-      </div>
-    </article>`;
+    </article>
+  `).join('');
 }
 
-async function load(force = false) {
-  if (force) refreshBtn.classList.add('spinning');
-  grid.innerHTML = Array(8).fill('<div class="sk-card sk-anim"></div>').join('');
-  
-  const params = new URLSearchParams({...state, refresh: force ? '1' : '0'});
+function openArticle(url) {
+  const read = JSON.parse(localStorage.getItem('read_articles') || '[]');
+  if (!read.includes(url)) {
+    read.push(url);
+    localStorage.setItem('read_articles', JSON.stringify(read));
+  }
+  window.open(url, '_blank');
+  renderCards();
+}
+
+async function getAISummary(url, title) {
+  const modal = document.getElementById('modal-backdrop');
+  const summaryText = document.getElementById('modal-summary');
+  document.getElementById('modal-title').innerText = title;
+  summaryText.innerText = "Génération du résumé par l'IA...";
+  modal.classList.add('open');
+
   try {
-    const res = await fetch(`/api/feed?${params}`);
+    const res = await fetch('/api/summarize', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({url, title})
+    });
     const data = await res.json();
-    
-    sourceEl.innerHTML = '<option value="">Toutes les sources</option>' + 
-      data.sources.map(s => `<option value="${s}" ${s===state.source?'selected':''}>${s}</option>`).join('');
-    
-    errorsEl.innerHTML = data.errors.map(e => `<div class="error-banner">⚠️ ${e}</div>`).join('');
-    countBadge.textContent = `${data.total} résultat${data.total>1?'s':''}`;
-    lastUpdate.textContent = `Mis à jour ${relativeTime(data.fetch_ts)}`;
-
-    if (data.items.length === 0) {
-      grid.innerHTML = `<div class="state"><div class="state-icon">🔎</div><h3>Aucun résultat</h3><p>Essayez d'autres filtres ou mots-clés.</p></div>`;
-    } else {
-      grid.innerHTML = data.items.map((item, i) => cardHTML(item, i)).join('');
-      document.querySelectorAll('.card').forEach((card) => {
-        card.onclick = () => {
-          const item = data.items.find(i => i.link === card.dataset.url);
-          openModal(item, card);
-        };
-      });
-    }
-  } catch (err) {
-    grid.innerHTML = `<div class="state"><div class="state-icon">📡</div><h3>Erreur réseau</h3><p>Le serveur ne répond pas.</p></div>`;
-  } finally {
-    refreshBtn.classList.remove('spinning');
+    summaryText.innerText = data.summary;
+  } catch {
+    summaryText.innerText = "Erreur lors du résumé.";
   }
 }
 
-function openModal(item, cardEl) {
-  let readList = JSON.parse(localStorage.getItem('read_articles') || '[]');
-  if (!readList.includes(item.link)) {
-    readList.push(item.link);
-    localStorage.setItem('read_articles', JSON.stringify(readList));
-    cardEl.classList.add('read');
-  }
+document.getElementById('close-modal').onclick = () => document.getElementById('modal-backdrop').classList.remove('open');
+document.getElementById('btn-refresh').onclick = () => loadFeed(true);
+document.getElementById('search').oninput = (e) => { state.search = e.target.value; loadFeed(); };
 
-  document.getElementById('modal-source').textContent = item.source;
-  document.getElementById('modal-title').textContent = item.title;
-  document.getElementById('modal-link').href = item.link;
-  const summaryEl = document.getElementById('modal-summary');
-  summaryEl.textContent = "Génération du résumé en cours...";
-  summaryEl.classList.add('loading');
-  
-  backdrop.classList.add('open');
-  document.body.style.overflow = 'hidden';
-
-  fetch('/api/summarize', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({url: item.link, title: item.title, is_video: state.type === 'videos'})
-  })
-  .then(r => r.json())
-  .then(data => {
-    summaryEl.textContent = data.summary;
-    summaryEl.classList.remove('loading');
-  })
-  .catch(() => {
-    summaryEl.textContent = "Erreur de résumé.";
-    summaryEl.classList.remove('loading');
-  });
-}
-
-document.getElementById('btn-close').onclick = () => {
-  backdrop.classList.remove('open');
-  document.body.style.overflow = '';
-};
-
-document.querySelectorAll('.tab').forEach(btn => {
-  btn.onclick = () => {
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.onclick = () => {
     document.querySelector('.tab.active').classList.remove('active');
-    btn.classList.add('active');
-    state.type = btn.dataset.type;
-    state.source = '';
-    load();
+    tab.classList.add('active');
+    state.type = tab.dataset.type;
+    loadFeed();
   };
 });
 
-searchEl.addEventListener('input', () => {
-  clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(() => {
-    state.search = searchEl.value.trim();
-    load();
-  }, 500);
-});
-
-sourceEl.onchange = () => { state.source = sourceEl.value; load(); };
-periodEl.onchange = () => { state.period = periodEl.value; load(); };
-refreshBtn.onclick = () => load(true);
-
-const btnTheme = document.getElementById('btn-theme');
-const savedTheme = localStorage.getItem('theme');
-if (savedTheme === 'light') { document.body.classList.add('light'); btnTheme.textContent = '☀️'; }
-btnTheme.onclick = () => {
-  const isLight = document.body.classList.toggle('light');
-  btnTheme.textContent = isLight ? '☀️' : '🌙';
-  localStorage.setItem('theme', isLight ? 'light' : 'dark');
-};
-
-load();
+// Init
+loadFeed();
 </script>
 </body>
 </html>
