@@ -478,7 +478,6 @@ select option:checked { background: #d0021b; color: #fff; }
   100% { background-position: -200% 0; }
 }
 
-/* Button "Obtenir un résumé" with rainbow effect */
 .btn-get-summary .rainbow-text {
   background: linear-gradient(90deg, 
     rgba(255,255,255,0.3) 0%,
@@ -488,27 +487,13 @@ select option:checked { background: #d0021b; color: #fff; }
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  animation: none;
+  opacity: 0;
+}
+
+.btn-get-summary:hover .rainbow-text {
   animation: glossShine 3s ease-in-out infinite;
-  opacity: 0.9;
-}
-
-.btn-get-summary:hover .rainbow-text {
   opacity: 1;
-}
-
-.btn-get-summary:hover {
-  color: var(--red);
-  border-color: var(--red);
-  background: rgba(208,2,27,0.05);
-}
-
-.btn-get-summary:hover .rainbow-text {
-  opacity: 1;
-}
-
-.btn-get-summary:focus-visible {
-  outline: 2px solid #4a90d9;
-  outline-offset: 2px;
 }
 
 /* Read state */
