@@ -373,10 +373,6 @@ select option:checked { background: #d0021b; color: #fff; }
 }
 
 /* ── Card ────────────────────────────────────────────────────────────────── */
-.card-scene {
-  min-height: 300px;
-  animation: fadeUp 0.35s ease both;
-}
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -386,14 +382,14 @@ select option:checked { background: #d0021b; color: #fff; }
   flex-direction: column;
   position: relative;
   transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition), background-color var(--theme-transition);
+  animation: fadeUp 0.35s ease both;
+  min-height: 44px;
   cursor: pointer;
-  height: 100%;
 }
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.card-scene { animation: fadeUp 0.35s ease both; }
 .card:hover, .card:focus {
   border-color: rgba(208,2,27,0.6);
   transform: translateY(-4px);
@@ -759,6 +755,93 @@ select option:checked { background: #d0021b; color: #fff; }
   .btn-filter-toggle { display: flex; }
   .header-inner { gap: 12px; }
 }
+
+/* ── Card flip ────────────────────────────────────────────────────────────── */
+.card-scene {
+  perspective: 1000px;
+  height: 100%;
+}
+.card-3d {
+  width: 100%; height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.card-3d.flipped { transform: rotateY(180deg); }
+.card, .card-back-face {
+  position: absolute; inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.card-back-face {
+  transform: rotateY(180deg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 24px;
+  text-align: center;
+  overflow: hidden;
+}
+.card-back-blur {
+  position: absolute; inset: 0;
+  filter: blur(4px);
+  opacity: 0.15;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: 12px;
+}
+.card-back-body {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+.read-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(208,2,27,0.12);
+  color: var(--red);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 5px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(208,2,27,0.3);
+}
+.back-source {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+.back-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.4;
+}
+.btn-unread {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  transition: color var(--transition), border-color var(--transition);
+  min-height: 36px;
+}
+.btn-unread:hover { color: var(--red); border-color: var(--red); }
 </style>
 </head>
 <body>
@@ -947,47 +1030,48 @@ function cardHTML(item, idx) {
   const thumb = `<img class="card-thumb" src="${escHtml(imgUrl)}" alt="${escHtml(item.title)}" loading="lazy" onerror="this.closest('.card-thumb-wrap').innerHTML='<div class=\\'card-thumb-placeholder\\'>${item.is_video ? '▶' : '📰'}</div>'"/>`;
   const summary = item.summary
     ? `<p class="card-summary">${escHtml(item.summary)}</p>` : '';
-  const cardId = 'card-' + idx + '-' + Math.random().toString(36).slice(2,7);
+  const cid = 'c' + idx + Date.now().toString(36);
   return `
-    <div class="card-scene" style="animation: fadeUp 0.35s ease both; animation-delay:${(idx % PAGE_SIZE) * 35}ms;">
-      <div class="card-3d" id="${cardId}">
-        <article class="card card-face card-front"
-          data-url="${escHtml(item.link)}"
-          data-title="${escHtml(item.title)}"
-          data-source="${escHtml(item.source)}"
-          data-date="${escHtml(item.date_display)}"
-          data-is-video="${item.is_video ? '1' : '0'}"
-          data-card-id="${cardId}"
-          role="listitem"
-          tabindex="0"
-          aria-label="${escHtml(item.title)}">
-          <div class="card-thumb-wrap">${thumb}</div>
-          <div class="card-body">
-            <span class="card-source">${escHtml(item.source)}</span>
-            <h2 class="card-title">${escHtml(item.title)}</h2>
-            ${summary}
-            <div class="card-footer">
-              <span class="card-date">📅 ${item.date_display}</span>
-              <button class="btn-mark-read" data-card-id="${cardId}" aria-label="Marquer comme lu">✓ Lu</button>
-              <button class="btn-get-summary" data-url="${escHtml(item.link)}" data-title="${escHtml(item.title)}" data-source="${escHtml(item.source)}" data-date="${escHtml(item.date_display)}" data-is-video="${item.is_video ? '1' : '0'}">
-                ✦ Résumé IA
-              </button>
-            </div>
-          </div>
-        </article>
-        <div class="card-face card-back-face">
-          <div class="card-back-blur-layer">
+    <div style="animation: fadeUp 0.35s ease both; animation-delay:${(idx % PAGE_SIZE) * 35}ms; min-height:300px;">
+      <div class="card-scene">
+        <div class="card-3d" id="${cid}">
+          <article class="card"
+            data-url="${escHtml(item.link)}"
+            data-title="${escHtml(item.title)}"
+            data-source="${escHtml(item.source)}"
+            data-date="${escHtml(item.date_display)}"
+            data-is-video="${item.is_video ? '1' : '0'}"
+            data-cid="${cid}"
+            role="listitem"
+            tabindex="0"
+            aria-label="${escHtml(item.title)}">
             <div class="card-thumb-wrap">${thumb}</div>
             <div class="card-body">
               <span class="card-source">${escHtml(item.source)}</span>
               <h2 class="card-title">${escHtml(item.title)}</h2>
+              ${summary}
+              <div class="card-footer">
+                <span class="card-date">📅 ${item.date_display}</span>
+                <button class="btn-get-summary" data-url="${escHtml(item.link)}" data-title="${escHtml(item.title)}" data-source="${escHtml(item.source)}" data-date="${escHtml(item.date_display)}" data-is-video="${item.is_video ? '1' : '0'}">
+                  ✦ Résumé IA
+                </button>
+              </div>
             </div>
-          </div>
-          <div class="card-back-content">
-            <span class="read-badge">✓ Lu</span>
-            <span class="card-back-source">${escHtml(item.source)} · ${item.date_display}</span>
-            <span class="card-back-title">${escHtml(item.title)}</span>
-            <button class="btn-unread" data-card-id="${cardId}" aria-label="Marquer comme non lu">↩ Marquer comme non lu</button>
+          </article>
+          <div class="card-back-face">
+            <div class="card-back-blur">
+              <div class="card-thumb-wrap">${thumb}</div>
+              <div style="padding:12px 14px">
+                <div style="font-size:9.5px;color:var(--red);font-weight:700;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:6px">${escHtml(item.source)}</div>
+                <div style="font-size:13.5px;font-weight:600;color:var(--text);line-height:1.45">${escHtml(item.title)}</div>
+              </div>
+            </div>
+            <div class="card-back-body">
+              <span class="read-badge">✓ Lu</span>
+              <span class="back-source">${escHtml(item.source)} · ${item.date_display}</span>
+              <span class="back-title">${escHtml(item.title)}</span>
+              <button class="btn-unread" data-cid="${cid}" aria-label="Marquer comme non lu">↩ Marquer comme non lu</button>
+            </div>
           </div>
         </div>
       </div>
@@ -1007,14 +1091,11 @@ function markAsRead(url) {
 }
 function applyReadState() {
   const read = getReadSet();
-  grid.querySelectorAll('.card-front[data-url]').forEach(article => {
-    if (read.has(article.dataset.url)) {
-      article.classList.add('read');
-      const cardId = article.dataset.cardId;
-      if (cardId) {
-        const card3d = document.getElementById(cardId);
-        if (card3d) card3d.classList.add('flipped');
-      }
+  grid.querySelectorAll('.card[data-url]').forEach(card => {
+    if (read.has(card.dataset.url)) {
+      card.classList.add('read');
+      const card3d = document.getElementById(card.dataset.cid);
+      if (card3d) card3d.classList.add('flipped');
     }
   });
 }
@@ -1178,18 +1259,22 @@ function closeModal() {
 
 // ── Attach event listeners to cards ─────────────────────────────────────────
 function attachCardEventListeners() {
-  grid.querySelectorAll('.card-front').forEach(card => {
+  grid.querySelectorAll('.card').forEach(card => {
     card.addEventListener('click', (e) => {
-      if (e.target.closest('.btn-get-summary') || e.target.closest('.btn-mark-read')) return;
+      if (e.target.closest('.btn-get-summary')) return;
       markAsRead(card.dataset.url);
       card.classList.add('read');
+      const card3d = document.getElementById(card.dataset.cid);
+      if (card3d) card3d.classList.add('flipped');
       window.open(card.dataset.url, '_blank');
     });
     card.addEventListener('keydown', (e) => {
-      if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('.btn-get-summary') && !e.target.closest('.btn-mark-read')) {
+      if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('.btn-get-summary')) {
         e.preventDefault();
         markAsRead(card.dataset.url);
         card.classList.add('read');
+        const card3d = document.getElementById(card.dataset.cid);
+        if (card3d) card3d.classList.add('flipped');
         window.open(card.dataset.url, '_blank');
       }
     });
@@ -1210,24 +1295,13 @@ function attachCardEventListeners() {
     });
   });
 
-  grid.querySelectorAll('.btn-mark-read').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const card3d = document.getElementById(btn.dataset.cardId);
-      if (!card3d) return;
-      card3d.classList.add('flipped');
-      const article = card3d.querySelector('.card-front');
-      if (article) { markAsRead(article.dataset.url); article.classList.add('read'); }
-    });
-  });
-
   grid.querySelectorAll('.btn-unread').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const card3d = document.getElementById(btn.dataset.cardId);
+      const card3d = document.getElementById(btn.dataset.cid);
       if (!card3d) return;
       card3d.classList.remove('flipped');
-      const article = card3d.querySelector('.card-front');
+      const article = card3d.querySelector('.card');
       if (article) {
         article.classList.remove('read');
         const read = getReadSet();
