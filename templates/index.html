@@ -743,7 +743,7 @@ select option:checked { background: #d0021b; color: #fff; }
 .btn-filter-toggle.open .filter-chevron { transform: rotate(180deg); }
 .filter-chevron {
   display: inline-block;
-  transition: transform var(--transition);
+  transition: transform var(--interval);
 }
 
 /* ── Responsive mobile ───────────────────────────────────────────────────── */
@@ -857,6 +857,9 @@ select option:checked { background: #d0021b; color: #fff; }
 </div>
 
 <script>
+// ── Placeholder image ───────────────────────────────────────────────────────
+const placeholderImg = 'https://raw.githubusercontent.com/Luklyn/TechWatch/main/public/images/tech-placeholder.jpg';
+
 // ── State ──────────────────────────────────────────────────────────────────
 const state = { type: 'articles', search: '', source: '', period: '' };
 let debounceTimer = null;
@@ -890,7 +893,6 @@ const btnClose      = document.getElementById('btn-close-modal');
 const btnTTS        = document.getElementById('btn-tts');
 const btnFilterToggle = document.getElementById('btn-filter-toggle');
 const toolbarFilters  = document.getElementById('toolbar-filters');
-const placeholderImg = 'https://raw.githubusercontent.com/Luklyn/TechWatch/main/public/images/tech-placeholder.jpg';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 function relativeTime(ts) {
@@ -934,7 +936,7 @@ function skeletons(n = PAGE_SIZE) {
 function cardHTML(item, idx) {
   const imgSrc = proxyImg(item.image, item.is_video);
   const imgUrl = imgSrc || placeholderImg;
-  const thumb = ` img class="card-thumb" src="${escHtml(imgUrl)}" alt="${escHtml(item.title)}" loading="lazy" onerror="this.closest('.card-thumb-wrap').innerHTML=' div class=\\'card-thumb-placeholder\\'>${item.is_video ? '▶' : '📰'} /div>'"/>`;
+  const thumb = `<img class="card-thumb" src="${escHtml(imgUrl)}" alt="${escHtml(item.title)}" loading="lazy" onerror="this.closest('.card-thumb-wrap').innerHTML='<div class=\\'card-thumb-placeholder\\'>${item.is_video ? '▶' : '📰'}</div>'"/>`;
   const summary = item.summary
     ? `<p class="card-summary">${escHtml(item.summary)}</p>` : '';
   return `
@@ -1012,7 +1014,6 @@ function speakText(text) {
     return;
   }
 
-  // Arrêter la parole en cours
   speechSynthesis.cancel();
 
   const utterance = new SpeechSynthesisUtterance(text);
@@ -1082,7 +1083,6 @@ function openModal(item) {
 
   backdrop.addEventListener('keydown', handleModalKeydown);
 
-  // Arrêter toute lecture en cours
   speechSynthesis.cancel();
   btnTTS.classList.remove('playing');
 
@@ -1140,10 +1140,8 @@ function closeModal() {
 
 // ── Attach event listeners to cards ─────────────────────────────────────────
 function attachCardEventListeners() {
-  // Click sur le card ouvre l'article original
   grid.querySelectorAll('.card').forEach(card => {
     card.addEventListener('click', (e) => {
-      // Ne pas ouvrir si on clique sur le bouton résumé
       if (e.target.closest('.btn-get-summary')) return;
       
       markAsRead(card.dataset.url);
@@ -1151,7 +1149,6 @@ function attachCardEventListeners() {
       window.open(card.dataset.url, '_blank');
     });
 
-    // Keyboard navigation sur le card
     card.addEventListener('keydown', (e) => {
       if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('.btn-get-summary')) {
         e.preventDefault();
@@ -1162,7 +1159,6 @@ function attachCardEventListeners() {
     });
   });
 
-  // Click sur le bouton "Résumé IA"
   grid.querySelectorAll('.btn-get-summary').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
