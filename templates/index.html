@@ -388,7 +388,6 @@ select option:checked { background: #d0021b; color: #fff; }
   transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition), background-color var(--theme-transition);
   min-height: 44px;
   cursor: pointer;
-  height: 100%;
 }
 .card:hover, .card:focus {
   border-color: rgba(208,2,27,0.6);
@@ -512,13 +511,9 @@ select option:checked { background: #d0021b; color: #fff; }
 .card-scene {
   perspective: 1000px;
   border-radius: 12px;
-  position: relative;
-  display: flex;
-  flex-direction: column;
 }
 .card-flip-inner {
   width: 100%;
-  flex: 1;
   transform-style: preserve-3d;
   transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
@@ -527,27 +522,14 @@ select option:checked { background: #d0021b; color: #fff; }
 .card-scene.is-flipped .card-flip-inner {
   transform: rotateY(180deg);
 }
-/* Recto : flux normal, donne la hauteur */
+/* Recto : en flux normal, sa hauteur naturelle devient celle de la scene */
 .card-face-front {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   border-radius: 12px;
-  overflow: hidden;
   width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
 }
-/* Verso : superposé au recto, même taille */
-.card-face-back {
-  position: absolute;
-  inset: 0;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  border-radius: 12px;
-  overflow: hidden;
-  transform: rotateY(180deg);
-}
+/* Verso : superposé, même taille que le recto */
 .card-face-back {
   position: absolute;
   inset: 0;
