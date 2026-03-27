@@ -933,9 +933,8 @@ function skeletons(n = PAGE_SIZE) {
 
 function cardHTML(item, idx) {
   const imgSrc = proxyImg(item.image, item.is_video);
-  const thumb  = imgSrc
-    ? ` img class="card-thumb" src="${escHtml(imgSrc)}" alt="${escHtml(item.title)}" loading="lazy" onerror="this.closest('.card-thumb-wrap').innerHTML=' div class=\\'card-thumb-placeholder\\'>${item.is_video ? '▶' : '📰'} /div>'"/>`
-    : ` img class="card-thumb" src="${placeholderImg}" alt="Tech placeholder" loading="lazy"/>`;
+  const imgUrl = imgSrc || placeholderImg;
+  const thumb = ` img class="card-thumb" src="${escHtml(imgUrl)}" alt="${escHtml(item.title)}" loading="lazy" onerror="this.closest('.card-thumb-wrap').innerHTML=' div class=\\'card-thumb-placeholder\\'>${item.is_video ? '▶' : '📰'} /div>'"/>`;
   const summary = item.summary
     ? `<p class="card-summary">${escHtml(item.summary)}</p>` : '';
   return `
