@@ -276,23 +276,41 @@ def scrape_article(url: str) -> str:
         return ""
 
 
-def call_hf(text: str, title: str, is_video: bool = False) -> str:
+def call_hf(text: str, title: str, is_video: bool = False, is_digest: bool = False) -> str:
     """Appelle Llama via HuggingFace Inference API et retourne un résumé en français."""
-    content_type = "vidéo YouTube" if is_video else "article"
-    messages = [
-        {
-            "role": "system",
-            "content": (
-                f"Tu es un assistant spécialisé en technologie. "
-                f"Tu résumes des {content_type}s tech en français, en prose fluide de 5 à 8 phrases. "
-                f"Tu vas droit au but sans commencer par 'Cet article' ou 'Cette vidéo'."
-            ),
-        },
-        {
-            "role": "user",
-            "content": f"Résume cette {content_type} intitulée « {title} » :\n\n{text[:3500]}",
-        },
-    ]
+    if is_digest:
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    "Tu es un assistant spécialisé en technologie. "
+                    "À partir d'une liste de titres d'actualités tech, rédige un digest journalier "
+                    "en français en 8 à 12 phrases fluides. Regroupe les sujets similaires, "
+                    "identifie les tendances du jour, et conclus par les points à retenir. "
+                    "Commence directement par les faits, sans introduction générique."
+                ),
+            },
+            {
+                "role": "user",
+                "content": text[:3500],
+            },
+        ]
+    else:
+        content_type = "vidéo YouTube" if is_video else "article"
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    f"Tu es un assistant spécialisé en technologie. "
+                    f"Tu résumes des {content_type}s tech en français, en prose fluide de 5 à 8 phrases. "
+                    f"Tu vas droit au but sans commencer par 'Cet article' ou 'Cette vidéo'."
+                ),
+            },
+            {
+                "role": "user",
+                "content": f"Résume cette {content_type} intitulée « {title} » :\n\n{text[:3500]}",
+            },
+        ]
     headers = {
         "Authorization": f"Bearer {HF_TOKEN}",
         "Content-Type": "application/json",
@@ -329,9 +347,22 @@ async def api_summarize(body: dict):
     if url in _summary_cache:
         return JSONResponse({"summary": _summary_cache[url], "cached": True})
 
-    text    = scrape_article(url)
     is_video = body.get("is_video", False)
-    summary = call_hf(text or f"Contenu non lisible pour : {title}", title, is_video=is_video)
+
+    # Cas spécial : Digest du jour (liste de titres fournie directement)
+    digest_titles = body.get("digest_titles", "")
+    if digest_titles:
+        today = datetime.utcnow().strftime("%d/%m/%Y")
+        digest_text = f"Voici les titres des actualités tech du {today} :\n{digest_titles}"
+        summary = call_hf(
+            digest_text,
+            "Digest tech du jour",
+            is_video=False,
+            is_digest=True
+        )
+    else:
+        text    = scrape_article(url)
+        summary = call_hf(text or f"Contenu non lisible pour : {title}", title, is_video=is_video)
 
     # Mettre en cache uniquement si succes
     if not summary.startswith("Impossible"):
