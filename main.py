@@ -24,6 +24,11 @@ if not HF_TOKEN:
 HF_MODEL = "meta-llama/Llama-3.1-8B-Instruct"
 HF_URL   = "https://router.huggingface.co/v1/chat/completions"
 
+# ─── CATÉGORIES ───────────────────────────────────────────────────────────────
+# Personnalisez librement cette liste — les noms sont utilisés tels quels dans l'UI
+CATEGORIES = ["Tech", "Gaming", "Smartphone"]
+CATEGORY_OTHER = "Autre"  # fallback si aucune catégorie ne correspond
+
 # ─── SOURCES ─────────────────────────────────────────────────────────────────
 
 RSS_FEEDS = {
@@ -98,6 +103,7 @@ def fetch_one(name, url, is_youtube):
                     "image": img,
                     "summary": summary,
                     "is_video": is_youtube,
+                    "category": CATEGORY_OTHER,  # sera mis à jour par categorize_batch
                 })
             except Exception:
                 continue
@@ -106,6 +112,53 @@ def fetch_one(name, url, is_youtube):
         return name, [], f"{name} : timeout (6s)"
     except Exception as e:
         return name, [], f"{name} : {str(e)[:80]}"
+
+
+def categorize_batch(items: list) -> dict:
+    """Categorise une liste d'articles via Llama. Retourne {title: category}."""
+    if not items:
+        return {}
+    categories_str = ", ".join(CATEGORIES)
+    # Construire le prompt avec tous les titres numérotés
+    items_text = "\n".join(
+        f"{i+1}. {item['title']}" for i, item in enumerate(items)
+    )
+    prompt = (
+        f"Catégorise chaque titre en UNE seule catégorie parmi : {categories_str}, {CATEGORY_OTHER}.\n"
+        f"Réponds UNIQUEMENT avec les numéros et catégories, format strict : 1. Tech\n2. Gaming\n etc.\n"
+        f"Titres :\n{items_text}"
+    )
+    headers = {"Authorization": f"Bearer {HF_TOKEN}", "Content-Type": "application/json"}
+    payload = {
+        "model": HF_MODEL,
+        "messages": [{"role": "user", "content": prompt}],
+        "max_tokens": len(items) * 10,
+        "temperature": 0.1,
+    }
+    try:
+        r = requests.post(HF_URL, headers=headers, json=payload, timeout=30)
+        r.raise_for_status()
+        text = r.json()["choices"][0]["message"]["content"].strip()
+        result = {}
+        valid = CATEGORIES + [CATEGORY_OTHER]
+        for line in text.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            parts = line.split(".", 1)
+            if len(parts) == 2:
+                try:
+                    idx = int(parts[0].strip()) - 1
+                    cat = parts[1].strip()
+                    # Trouver la catégorie la plus proche
+                    matched = next((c for c in valid if c.lower() in cat.lower()), CATEGORY_OTHER)
+                    if 0 <= idx < len(items):
+                        result[items[idx]["title"]] = matched
+                except (ValueError, IndexError):
+                    continue
+        return result
+    except Exception:
+        return {}
 
 
 def fetch_all(source_dict, is_youtube):
@@ -118,6 +171,17 @@ def fetch_all(source_dict, is_youtube):
             if err:
                 errors.append(err)
     all_items.sort(key=lambda x: x["date"], reverse=True)
+
+    # Catégoriser par batch de 20 pour limiter les tokens
+    if not is_youtube:
+        BATCH = 20
+        for i in range(0, len(all_items), BATCH):
+            batch = all_items[i:i+BATCH]
+            cats = categorize_batch(batch)
+            for item in batch:
+                if item["title"] in cats:
+                    item["category"] = cats[item["title"]]
+
     return all_items, errors
 
 
@@ -135,6 +199,7 @@ async def api_feed(
     source: str = Query(""),
     search: str = Query(""),
     period: str = Query(""),
+    request_category: str = Query("", alias="category"),
     refresh: bool = Query(False),
 ):
     is_youtube = type == "videos"
@@ -159,6 +224,11 @@ async def api_feed(
         filtered = [i for i in filtered if q in i["title"].lower()]
     if source:
         filtered = [i for i in filtered if i["source"] == source]
+    category_param = request_category
+    if category_param:
+        cats = [c.strip() for c in category_param.split(",") if c.strip()]
+        if cats:
+            filtered = [i for i in filtered if i.get("category", CATEGORY_OTHER) in cats]
     if period:
         now = datetime.utcnow()
         def in_period(item):
@@ -180,6 +250,7 @@ async def api_feed(
         "errors": errors,
         "fetch_ts": fetch_ts,
         "sources": sources,
+        "categories": CATEGORIES,
     })
 
 # ─── SUMMARIZE ────────────────────────────────────────────────────────────────
