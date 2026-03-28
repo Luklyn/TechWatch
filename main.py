@@ -122,32 +122,81 @@ def fetch_one(name, url, is_youtube):
         return name, [], f"{name} : {str(e)[:80]}"
 
 
+# ─── CATÉGORISATION ───────────────────────────────────────────────────────────
+
+# 4. Pré-filtre par mots-clés (évite des appels Llama inutiles sur les cas évidents)
+KEYWORD_RULES = {
+    "Tech":       ["GPU", "CPU", "RTX", "RX", "RAM", "DDR", "benchmark", "carte mère",
+                   "processeur", "overclocking", "watercooling", "SSD", "NVMe", "PCIe",
+                   "socket", "chipset", "BIOS", "driver", "Windows", "Linux", "MacOS"],
+    "Gaming":     ["jeu", "game", "console", "PS5", "Xbox", "Nintendo", "Switch",
+                   "esport", "DLC", "patch", "update", "FPS", "RPG", "trailer", "Steam"],
+    "Smartphone": ["iPhone", "Android", "Samsung", "Pixel", "smartphone", "tablette",
+                   "iOS", "application", "app", "mobile", "5G", "OnePlus", "Xiaomi"],
+}
+
+def quick_categorize(title: str, summary: str) -> str | None:
+    """Retourne une catégorie si les mots-clés sont évidents, sinon None (→ Llama)."""
+    text = (title + " " + summary).lower()
+    for cat, keywords in KEYWORD_RULES.items():
+        if any(kw.lower() in text for kw in keywords):
+            return cat
+    return None
+
+
 def categorize_batch(items: list) -> dict:
-    """Categorise une liste d'articles via Llama. Retourne {title: category}."""
+    """Categorise une liste d'articles. Pré-filtre par mots-clés, puis Llama pour le reste."""
     if not items:
         return {}
+
+    result = {}
+    to_llama = []
+
+    # 4. Pré-filtre mots-clés
+    for item in items:
+        cat = quick_categorize(item["title"], item.get("summary", ""))
+        if cat:
+            result[item["title"]] = cat
+        else:
+            to_llama.append(item)
+
+    if not to_llama:
+        return result
+
     categories_str = ", ".join(CATEGORIES)
-    # Construire le prompt avec tous les titres numérotés
+
+    # 2. Inclure les 60 premiers caractères du résumé pour plus de contexte
     items_text = "\n".join(
-        f"{i+1}. {item['title']}" for i, item in enumerate(items)
+        f"{i+1}. {item['title']} — {item.get('summary', '')[:60]}"
+        for i, item in enumerate(to_llama)
     )
+
+    # 1. Prompt amélioré avec critères stricts + autorisation "je ne sais pas"
+    # 3. Demande d'un score de confiance pour basculer en Autre si faible
     prompt = (
-        f"Catégorise chaque titre en UNE seule catégorie parmi : {categories_str}, {CATEGORY_OTHER}.\n"
-        f"Réponds UNIQUEMENT avec les numéros et catégories, format strict : 1. Tech\n2. Gaming\n etc.\n"
+        f"Catégorise chaque titre en UNE seule catégorie parmi : {categories_str}.\n"
+        f"Utilise '{CATEGORY_OTHER}' si le sujet ne correspond CLAIREMENT à aucune catégorie.\n"
+        f"Critères stricts :\n"
+        f"- Tech : composants PC, GPU, CPU, RAM, stockage, cartes mères, boîtiers, refroidissement, logiciels système\n"
+        f"- Gaming : jeux vidéo, consoles, périphériques gaming, esport\n"
+        f"- Smartphone : téléphones mobiles, tablettes, iOS, Android, applications mobiles\n"
+        f"- {CATEGORY_OTHER} : actualité business, bourse, politique, généraliste, ou sujet ambigu\n"
+        f"Réponds UNIQUEMENT au format strict, une ligne par titre, avec un score de confiance (haute/faible) :\n"
+        f"1. Tech (haute)\n2. {CATEGORY_OTHER} (faible)\netc.\n"
         f"Titres :\n{items_text}"
     )
+
     headers = {"Authorization": f"Bearer {HF_TOKEN}", "Content-Type": "application/json"}
     payload = {
         "model": HF_MODEL,
         "messages": [{"role": "user", "content": prompt}],
-        "max_tokens": len(items) * 10,
-        "temperature": 0.1,
+        "max_tokens": len(to_llama) * 12,
+        "temperature": 0.0,  # 5. Température 0.0 pour catégorisation pure
     }
     try:
         r = requests.post(HF_URL, headers=headers, json=payload, timeout=30)
         r.raise_for_status()
         text = r.json()["choices"][0]["message"]["content"].strip()
-        result = {}
         valid = CATEGORIES + [CATEGORY_OTHER]
         for line in text.splitlines():
             line = line.strip()
@@ -157,16 +206,22 @@ def categorize_batch(items: list) -> dict:
             if len(parts) == 2:
                 try:
                     idx = int(parts[0].strip()) - 1
-                    cat = parts[1].strip()
-                    # Trouver la catégorie la plus proche
-                    matched = next((c for c in valid if c.lower() in cat.lower()), CATEGORY_OTHER)
-                    if 0 <= idx < len(items):
-                        result[items[idx]["title"]] = matched
+                    rest = parts[1].strip()
+                    # 3. Extraire catégorie et confiance : "Tech (haute)" ou "Tech (faible)"
+                    confidence_low = "faible" in rest.lower()
+                    cat_raw = rest.split("(")[0].strip()
+                    matched = next((c for c in valid if c.lower() in cat_raw.lower()), CATEGORY_OTHER)
+                    # Si confiance faible → forcer Autre
+                    if confidence_low:
+                        matched = CATEGORY_OTHER
+                    if 0 <= idx < len(to_llama):
+                        result[to_llama[idx]["title"]] = matched
                 except (ValueError, IndexError):
                     continue
-        return result
     except Exception:
-        return {}
+        pass
+
+    return result
 
 
 def fetch_all(source_dict, is_youtube):
