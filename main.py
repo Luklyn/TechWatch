@@ -34,8 +34,14 @@ CATEGORY_OTHER = "Autre"  # fallback si aucune catégorie ne correspond
 RSS_FEEDS = {
     "TechPowerUp":    "https://www.techpowerup.com/rss/news",
     "Hardware & Co":  "https://hardwareand.co/actualites?format=feed&type=rss",
-    "Hardware.fr":    "https://www.hardware.fr/backend/news.xml",
-    "Les Numériques": "https://www.lesnumeriques.com/informatique/rss.xml",
+    "The Verge":      "https://www.theverge.com/tech/rss/index.xml",
+    "Ars Technica":   "https://feeds.arstechnica.com/arstechnica/index",
+    "9to5Mac":        "https://9to5mac.com/feed/",
+    "9to5Google":     "https://9to5google.com/feed/",
+    "FrAndroid":      "https://www.frandroid.com/feed",
+    "GamesIndustry":  "https://www.gamesindustry.biz/feed",
+    "Digital Foundry": "https://www.eurogamer.net/feed/digitalfoundry",
+    "Les Numériques": "https://www.lesnumeriques.com/rss.xml",
 }
 
 
@@ -45,6 +51,8 @@ YOUTUBE_CHANNELS = {
     "Hardware Canucks": "https://www.youtube.com/feeds/videos.xml?channel_id=UCTzLRZUgelatKZ4nyIKcAbg",
     "Hardware Unboxed": "https://www.youtube.com/feeds/videos.xml?channel_id=UCI8iQa1hv7oV_Z8D35vVuSg",
     "Matt Lee":         "https://www.youtube.com/feeds/videos.xml?channel_id=UCGHzpEcSwfBQJAitgw2pgVQ",
+    "Digital Foundry":  "https://www/youtube.com/feeds/videos.xml?channel_id=UC9PBzalIcEQCsiIkq36PyUA",
+    "Marques Brownlee": "https://www.youtube.com/feeds/videos.xml?channel_id=UCBJycsmduvYEL83R_U4JriQ",
 }
 
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
