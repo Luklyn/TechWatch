@@ -205,8 +205,7 @@ header {
   top: 73px;
   z-index: 40;
   background: var(--bg);
-  padding: 12px 0 0;
-  margin-bottom: 0;
+  padding: 16px 0 0;
   border-bottom: 1px solid var(--border);
   backdrop-filter: blur(10px);
   transition: background-color var(--theme-transition), border-color var(--theme-transition);
@@ -382,7 +381,6 @@ select option:checked { background: #d0021b; color: #fff; }
   flex-direction: column;
   position: relative;
   transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition), background-color var(--theme-transition);
-  animation: fadeUp 0.35s ease both;
   min-height: 44px;
   cursor: pointer;
 }
@@ -508,13 +506,113 @@ select option:checked { background: #d0021b; color: #fff; }
   outline-offset: 2px;
 }
 
-/* Read state */
+/* Read state — géré par le flip 3D */
 .card.read {
-  opacity: 0.6;
-  filter: grayscale(35%);
-  transition: opacity var(--transition), filter var(--transition), border-color var(--transition), transform var(--transition), box-shadow var(--transition), background-color var(--theme-transition);
+  transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition), background-color var(--theme-transition);
 }
-.card.read:hover { opacity: 0.85; filter: grayscale(0%); }
+
+/* ── Card flip 3D ────────────────────────────────────────────────────────── */
+.card-scene {
+  perspective: 1000px;
+  border-radius: 12px;
+}
+.card-flip-inner {
+  width: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  animation: fadeUp 0.35s ease both;
+}
+.card-scene.is-flipped .card-flip-inner {
+  transform: rotateY(180deg);
+}
+.card-face-front {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 12px;
+  width: 100%;
+}
+.card-face-back {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 12px;
+  overflow: hidden;
+  transform: rotateY(180deg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+.card-back-overlay {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--red) 8%, var(--surface) 92%);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 24px;
+}
+.badge-lu {
+  background: var(--red);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  padding: 6px 18px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  box-shadow: 0 4px 14px rgba(208, 2, 27, 0.4);
+}
+.badge-lu-check {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.7);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.badge-lu-check::after {
+  content: '';
+  display: block;
+  width: 5px; height: 3px;
+  border-left: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+  transform: rotate(-45deg) translateY(-1px);
+}
+.back-article-title {
+  color: var(--text);
+  font-size: 12.5px;
+  font-weight: 500;
+  text-align: center;
+  line-height: 1.45;
+  opacity: 0.75;
+  max-width: 200px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.btn-unread {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 9px 18px;
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition), color var(--transition);
+  letter-spacing: 0.2px;
+  min-height: 36px;
+}
+.btn-unread:hover { color: var(--red); border-color: var(--red); background: var(--red-glow); }
+.btn-unread:focus-visible { outline: 2px solid #4a90d9; outline-offset: 2px; }
 
 /* ── Skeleton ────────────────────────────────────────────────────────────── */
 .skeleton {
@@ -760,22 +858,24 @@ select option:checked { background: #d0021b; color: #fff; }
 .app-layout {
   display: flex;
   align-items: flex-start;
-  min-height: calc(100vh - 120px);
+  gap: 0;
 }
 
 /* ── Side menu ───────────────────────────────────────────────────────────── */
 .side-menu {
-  width: 220px;
+  width: 240px;
   flex-shrink: 0;
   position: sticky;
-  top: 130px;
-  padding: 20px 0 20px 0;
+  top: 73px;
+  padding: 20px 0;
   display: flex;
   flex-direction: column;
   gap: 24px;
   border-right: 1px solid var(--border);
-  min-height: calc(100vh - 130px);
+  max-height: calc(100vh - 73px);
+  overflow-y: auto;
   transition: background-color var(--theme-transition), border-color var(--theme-transition);
+  scrollbar-width: thin;
 }
 .side-section-label {
   font-size: 9px;
@@ -791,15 +891,15 @@ select option:checked { background: #d0021b; color: #fff; }
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 7px 16px;
+  padding: 8px 16px;
   cursor: pointer;
   transition: background-color var(--transition), color var(--transition);
-  border-left: 2px solid transparent;
+  border-radius: 6px;
+  margin: 0 8px;
 }
 .side-item:hover { background: var(--surface2); }
 .side-item.active {
-  border-left-color: var(--red);
-  background: var(--surface);
+  background: rgba(208,2,27,0.18);
 }
 .side-item-dot {
   width: 7px; height: 7px;
@@ -819,12 +919,17 @@ select option:checked { background: #d0021b; color: #fff; }
 .side-item.active .side-item-label { color: var(--text); font-weight: 600; }
 .side-item-count {
   font-size: 10px;
-  color: var(--dim);
+  color: #fff;
   background: var(--surface2);
   padding: 1px 7px;
   border-radius: 10px;
   font-family: var(--font-sans);
+  font-weight: 600;
   transition: background-color var(--theme-transition), color var(--theme-transition);
+}
+.side-item.active .side-item-count {
+  background: rgba(208,2,27,0.35);
+  color: #fff;
 }
 .side-divider {
   height: 1px;
@@ -844,21 +949,20 @@ select option:checked { background: #d0021b; color: #fff; }
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 7px 16px;
+  padding: 8px 16px;
   cursor: pointer;
-  transition: background-color var(--transition);
-  border-left: 2px solid transparent;
+  transition: background-color var(--transition), color var(--transition);
+  border-radius: 6px;
+  margin: 0 8px;
   font-family: var(--font-sans);
   font-size: 13px;
   color: var(--muted);
-  position: relative;
 }
 .cat-pill:hover { background: var(--surface2); }
 .cat-pill.selected {
-  border-left-color: var(--red);
+  background: rgba(208,2,27,0.18);
   color: var(--text);
   font-weight: 600;
-  background: var(--surface);
 }
 .cat-pill-check {
   width: 14px; height: 14px;
@@ -878,17 +982,22 @@ select option:checked { background: #d0021b; color: #fff; }
 .cat-pill-count {
   margin-left: auto;
   font-size: 10px;
-  color: var(--dim);
+  color: #fff;
+  font-weight: 600;
   background: var(--surface2);
   padding: 1px 7px;
   border-radius: 10px;
+}
+.cat-pill.selected .cat-pill-count {
+  background: rgba(208,2,27,0.35);
+  color: #fff;
 }
 
 /* ── Main content area ───────────────────────────────────────────────────── */
 .main-content {
   flex: 1;
   min-width: 0;
-  padding-left: 24px;
+  padding-left: 28px;
 }
 
 @media (max-width: 768px) {
@@ -934,20 +1043,20 @@ select option:checked { background: #d0021b; color: #fff; }
 .period-item {
   display: flex;
   align-items: center;
-  padding: 7px 16px;
+  padding: 8px 16px;
   cursor: pointer;
   font-family: var(--font-sans);
   font-size: 13px;
   color: var(--muted);
-  border-left: 2px solid transparent;
+  border-radius: 6px;
+  margin: 0 8px;
   transition: background-color var(--transition), color var(--transition);
 }
 .period-item:hover { background: var(--surface2); }
 .period-item.active {
-  border-left-color: var(--red);
+  background: var(--surface2);
   color: var(--text);
   font-weight: 600;
-  background: var(--surface);
 }
 
 /* ── Digest modal ─────────────────────────────────────────────────────────── */
@@ -1029,51 +1138,14 @@ select option:checked { background: #d0021b; color: #fff; }
   </header>
 
   <main id="main" tabindex="-1">
-    <!-- Toolbar sticky -->
-    <div class="toolbar-sticky">
-      <div class="toolbar" role="search">
-        <div class="search-wrap">
-          <span class="search-icon" aria-hidden="true">🔍</span>
-          <label for="search" class="sr-only">Rechercher un article</label>
-          <input type="text" id="search" placeholder="Rechercher…" autocomplete="off" aria-label="Rechercher un article">
-        </div>
-        <button class="btn-digest" id="btn-digest" aria-label="Générer le digest IA du jour">
-          <span class="btn-digest-dot"></span>
-          Digest IA du jour
-        </button>
-        <!-- Selects cachés mais gardés pour la logique JS existante -->
-        <select id="filter-source" style="display:none" aria-hidden="true"><option value="">Toutes les sources</option></select>
-        <select id="filter-period" style="display:none" aria-hidden="true">
-          <option value="">Toutes les dates</option>
-          <option value="today">Aujourd'hui</option>
-          <option value="week">Cette semaine</option>
-          <option value="month">Ce mois</option>
-        </select>
-      </div>
-
-      <!-- Meta -->
-      <div class="meta-bar">
-        <span class="count-badge" id="count" aria-live="polite">Chargement…</span>
-        <button class="btn-refresh" id="btn-refresh" aria-label="Actualiser les flux">
-          <span class="refresh-icon" aria-hidden="true">↻</span> <span class="refresh-text">Actualiser</span>
-        </button>
-        <span class="last-update" id="last-update" aria-live="polite"></span>
-      </div>
-    </div>
-
-    <!-- 2-col layout -->
+    <!-- 2-col layout : sidebar + contenu -->
     <div class="app-layout">
+
       <!-- Side menu -->
       <nav class="side-menu" id="side-menu" aria-label="Filtres">
         <div>
-          <div class="side-section-label">Univers</div>
-          <div class="cat-pills" id="cat-pills">
-            <div class="cat-pill selected" data-cat="all">
-              <span class="cat-pill-check">✓</span>
-              <span>Tous</span>
-              <span class="cat-pill-count" id="count-all">—</span>
-            </div>
-          </div>
+          <div class="side-section-label">Sources</div>
+          <div id="source-list"></div>
         </div>
         <div class="side-divider"></div>
         <div>
@@ -1087,13 +1159,49 @@ select option:checked { background: #d0021b; color: #fff; }
         </div>
         <div class="side-divider"></div>
         <div>
-          <div class="side-section-label">Sources</div>
-          <div id="source-list"></div>
+          <div class="side-section-label">Univers</div>
+          <div class="cat-pills" id="cat-pills">
+            <div class="cat-pill selected" data-cat="all">
+              <span class="cat-pill-check">✓</span>
+              <span>Tous</span>
+              <span class="cat-pill-count" id="count-all">—</span>
+            </div>
+          </div>
         </div>
       </nav>
 
       <!-- Main content -->
       <div class="main-content">
+
+        <!-- Toolbar sticky (dans la colonne de droite) -->
+        <div class="toolbar-sticky" id="toolbar-sticky">
+          <div class="toolbar" role="search">
+            <div class="search-wrap">
+              <span class="search-icon" aria-hidden="true">🔍</span>
+              <label for="search" class="sr-only">Rechercher un article</label>
+              <input type="text" id="search" placeholder="Rechercher un article…" autocomplete="off" aria-label="Rechercher un article">
+            </div>
+            <button class="btn-digest" id="btn-digest" aria-label="Générer le digest IA du jour">
+              <span class="btn-digest-dot"></span>
+              Digest IA du jour
+            </button>
+            <select id="filter-source" style="display:none" aria-hidden="true"><option value="">Toutes les sources</option></select>
+            <select id="filter-period" style="display:none" aria-hidden="true">
+              <option value="">Toutes les dates</option>
+              <option value="today">Aujourd'hui</option>
+              <option value="week">Cette semaine</option>
+              <option value="month">Ce mois</option>
+            </select>
+          </div>
+          <div class="meta-bar">
+            <span class="count-badge" id="count" aria-live="polite">Chargement…</span>
+            <button class="btn-refresh" id="btn-refresh" aria-label="Actualiser les flux">
+              <span class="refresh-icon" aria-hidden="true">↻</span> <span class="refresh-text">Actualiser</span>
+            </button>
+            <span class="last-update" id="last-update" aria-live="polite"></span>
+          </div>
+        </div>
+
         <!-- Errors -->
         <div id="errors" role="alert" aria-live="assertive"></div>
         <!-- Grid -->
@@ -1101,6 +1209,7 @@ select option:checked { background: #d0021b; color: #fff; }
         <!-- Load more sentinel -->
         <div id="sentinel" style="height:1px;"></div>
       </div>
+
     </div>
   </main>
 </div>
@@ -1243,28 +1352,45 @@ function cardHTML(item, idx) {
   const summary = item.summary
     ? `<p class="card-summary">${escHtml(item.summary)}</p>` : '';
   return `
-    <article class="card" style="animation-delay:${(idx % PAGE_SIZE) * 35}ms"
-      data-url="${escHtml(item.link)}"
-      data-title="${escHtml(item.title)}"
-      data-source="${escHtml(item.source)}"
-      data-date="${escHtml(item.date_display)}"
-      data-is-video="${item.is_video ? '1' : '0'}"
-      role="listitem"
-      tabindex="0"
-      aria-label="${escHtml(item.title)}">
-      <div class="card-thumb-wrap">${thumb}</div>
-      <div class="card-body">
-        <span class="card-source">${escHtml(item.source)}</span>
-        <h2 class="card-title">${escHtml(item.title)}</h2>
-        ${summary}
-        <div class="card-footer">
-          <span class="card-date">📅 ${item.date_display}</span>
-          <button class="btn-get-summary" data-url="${escHtml(item.link)}" data-title="${escHtml(item.title)}" data-source="${escHtml(item.source)}" data-date="${escHtml(item.date_display)}" data-is-video="${item.is_video ? '1' : '0'}">
-            ✦ Résumé IA
-          </button>
+    <div class="card-scene" role="listitem">
+      <div class="card-flip-inner" style="animation-delay:${(idx % PAGE_SIZE) * 35}ms;">
+
+        <!-- Recto -->
+        <div class="card-face-front">
+          <article class="card"
+            data-url="${escHtml(item.link)}"
+            data-title="${escHtml(item.title)}"
+            data-source="${escHtml(item.source)}"
+            data-date="${escHtml(item.date_display)}"
+            data-is-video="${item.is_video ? '1' : '0'}"
+            tabindex="0"
+            aria-label="${escHtml(item.title)}">
+            <div class="card-thumb-wrap">${thumb}</div>
+            <div class="card-body">
+              <span class="card-source">${escHtml(item.source)}</span>
+              <h2 class="card-title">${escHtml(item.title)}</h2>
+              ${summary}
+              <div class="card-footer">
+                <span class="card-date">📅 ${item.date_display}</span>
+                <button class="btn-get-summary" data-url="${escHtml(item.link)}" data-title="${escHtml(item.title)}" data-source="${escHtml(item.source)}" data-date="${escHtml(item.date_display)}" data-is-video="${item.is_video ? '1' : '0'}">
+                  ✦ Résumé IA
+                </button>
+              </div>
+            </div>
+          </article>
         </div>
+
+        <!-- Verso -->
+        <div class="card-face-back">
+          <div class="card-back-overlay">
+            <div class="badge-lu"><span class="badge-lu-check"></span> Lu</div>
+            <p class="back-article-title">${escHtml(item.title)}</p>
+            <button class="btn-unread" data-url="${escHtml(item.link)}" aria-label="Marquer comme non lu">↩ Marquer non lu</button>
+          </div>
+        </div>
+
       </div>
-    </article>`;
+    </div>`;
 }
 
 // ── Read state ─────────────────────────────────────────────────────────────
@@ -1281,7 +1407,10 @@ function markAsRead(url) {
 function applyReadState() {
   const read = getReadSet();
   grid.querySelectorAll('.card[data-url]').forEach(card => {
-    if (read.has(card.dataset.url)) card.classList.add('read');
+    if (read.has(card.dataset.url)) {
+      card.classList.add('read');
+      card.closest('.card-scene')?.classList.add('is-flipped');
+    }
   });
 }
 
@@ -1447,18 +1576,21 @@ function attachCardEventListeners() {
   grid.querySelectorAll('.card').forEach(card => {
     card.addEventListener('click', (e) => {
       if (e.target.closest('.btn-get-summary')) return;
-      
-      markAsRead(card.dataset.url);
+      const url = card.dataset.url;
+      markAsRead(url);
       card.classList.add('read');
-      window.open(card.dataset.url, '_blank');
+      card.closest('.card-scene')?.classList.add('is-flipped');
+      window.open(url, '_blank');
     });
 
     card.addEventListener('keydown', (e) => {
       if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('.btn-get-summary')) {
         e.preventDefault();
-        markAsRead(card.dataset.url);
+        const url = card.dataset.url;
+        markAsRead(url);
         card.classList.add('read');
-        window.open(card.dataset.url, '_blank');
+        card.closest('.card-scene')?.classList.add('is-flipped');
+        window.open(url, '_blank');
       }
     });
   });
@@ -1467,16 +1599,30 @@ function attachCardEventListeners() {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      
-      const item = {
+      openModal({
         url:      btn.dataset.url,
         title:    btn.dataset.title,
         source:   btn.dataset.source,
         date:     btn.dataset.date,
         is_video: btn.dataset.isVideo === '1',
-      };
-      
-      openModal(item);
+      });
+    });
+  });
+
+  grid.querySelectorAll('.btn-unread').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const url = btn.dataset.url;
+      const read = getReadSet();
+      read.delete(url);
+      localStorage.setItem(READ_KEY, JSON.stringify([...read]));
+      const scene = btn.closest('.card-scene');
+      if (scene) {
+        scene.classList.remove('is-flipped');
+        scene.querySelector('.card[data-url]')?.classList.remove('read');
+      }
+      showToast('↩ Article marqué comme non lu');
     });
   });
 }
@@ -1750,10 +1896,13 @@ btnTheme.addEventListener('click', () => {
 });
 
 // ── Init ───────────────────────────────────────────────────────────────────
-// Calcul dynamique du top de la toolbar sticky selon la hauteur du header
+// Le top sticky est géré directement via CSS (top: 73px = hauteur header)
 function updateToolbarTop() {
   const headerH = document.querySelector('header').offsetHeight;
-  document.querySelector('.toolbar-sticky').style.top = headerH + 'px';
+  const toolbar = document.querySelector('.toolbar-sticky');
+  const sideMenu = document.querySelector('.side-menu');
+  if (toolbar) toolbar.style.top = headerH + 'px';
+  if (sideMenu) sideMenu.style.top = headerH + 'px';
 }
 updateToolbarTop();
 window.addEventListener('resize', updateToolbarTop, { passive: true });
