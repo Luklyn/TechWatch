@@ -756,94 +756,145 @@ select option:checked { background: #d0021b; color: #fff; }
   .header-inner { gap: 12px; }
 }
 
-/* ── Card flip ────────────────────────────────────────────────────────────── */
-.card-scene {
-  perspective: 1000px;
-  position: relative;
+/* ── Layout 2 colonnes ───────────────────────────────────────────────────── */
+.app-layout {
+  display: flex;
+  align-items: flex-start;
+  min-height: calc(100vh - 120px);
 }
-.card-3d {
-  width: 100%;
-  position: relative;
-  transform-style: preserve-3d;
-  transition: transform 0.65s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.card-3d.flipped { transform: rotateY(180deg); }
-.card {
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
-.card-back-face {
-  position: absolute; inset: 0;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  transform: rotateY(180deg);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+
+/* ── Side menu ───────────────────────────────────────────────────────────── */
+.side-menu {
+  width: 220px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 130px;
+  padding: 20px 0 20px 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  padding: 24px;
-  text-align: center;
-  overflow: hidden;
+  gap: 24px;
+  border-right: 1px solid var(--border);
+  min-height: calc(100vh - 130px);
+  transition: background-color var(--theme-transition), border-color var(--theme-transition);
 }
-.card-back-blur {
-  position: absolute; inset: 0;
-  filter: blur(4px);
-  opacity: 0.15;
-  pointer-events: none;
-  overflow: hidden;
-  border-radius: 12px;
-}
-.card-back-body {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-}
-.read-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(208,2,27,0.12);
-  color: var(--red);
-  font-size: 11px;
+.side-section-label {
+  font-size: 9px;
   font-weight: 700;
-  letter-spacing: 1px;
+  letter-spacing: 1.8px;
   text-transform: uppercase;
-  padding: 5px 14px;
-  border-radius: 20px;
-  border: 1px solid rgba(208,2,27,0.3);
+  color: var(--muted);
+  padding: 0 16px;
+  margin-bottom: 6px;
+  transition: color var(--theme-transition);
 }
-.back-source {
-  font-size: 11px;
-  color: var(--text-secondary);
-}
-.back-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text);
-  line-height: 1.4;
-}
-.btn-unread {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 8px 16px;
+.side-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 16px;
   cursor: pointer;
-  font-family: var(--font-sans);
-  transition: color var(--transition), border-color var(--transition);
-  min-height: 36px;
+  transition: background-color var(--transition), color var(--transition);
+  border-left: 2px solid transparent;
 }
-.btn-unread:hover { color: var(--red); border-color: var(--red); }
+.side-item:hover { background: var(--surface2); }
+.side-item.active {
+  border-left-color: var(--red);
+  background: var(--surface);
+}
+.side-item-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--dim);
+  flex-shrink: 0;
+  transition: background-color var(--transition);
+}
+.side-item.active .side-item-dot { background: var(--red); }
+.side-item-label {
+  font-size: 13px;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  transition: color var(--transition);
+  flex: 1;
+}
+.side-item.active .side-item-label { color: var(--text); font-weight: 600; }
+.side-item-count {
+  font-size: 10px;
+  color: var(--dim);
+  background: var(--surface2);
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-family: var(--font-sans);
+  transition: background-color var(--theme-transition), color var(--theme-transition);
+}
+.side-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 0;
+  transition: background-color var(--theme-transition);
+}
+
+/* Category pills (multi-select) */
+.cat-pills {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0;
+}
+.cat-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 16px;
+  cursor: pointer;
+  transition: background-color var(--transition);
+  border-left: 2px solid transparent;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--muted);
+  position: relative;
+}
+.cat-pill:hover { background: var(--surface2); }
+.cat-pill.selected {
+  border-left-color: var(--red);
+  color: var(--text);
+  font-weight: 600;
+  background: var(--surface);
+}
+.cat-pill-check {
+  width: 14px; height: 14px;
+  border-radius: 3px;
+  border: 1px solid var(--dim);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-size: 9px;
+  color: transparent;
+  transition: all var(--transition);
+}
+.cat-pill.selected .cat-pill-check {
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
+}
+.cat-pill-count {
+  margin-left: auto;
+  font-size: 10px;
+  color: var(--dim);
+  background: var(--surface2);
+  padding: 1px 7px;
+  border-radius: 10px;
+}
+
+/* ── Main content area ───────────────────────────────────────────────────── */
+.main-content {
+  flex: 1;
+  min-width: 0;
+  padding-left: 24px;
+}
+
+@media (max-width: 768px) {
+  .side-menu { display: none; }
+  .main-content { padding-left: 0; }
+}
 </style>
 </head>
 <body>
@@ -905,14 +956,37 @@ select option:checked { background: #d0021b; color: #fff; }
       </div>
     </div>
 
-    <!-- Errors -->
-    <div id="errors" role="alert" aria-live="assertive"></div>
+    <!-- 2-col layout -->
+    <div class="app-layout">
+      <!-- Side menu -->
+      <nav class="side-menu" id="side-menu" aria-label="Filtres">
+        <div>
+          <div class="side-section-label">Univers</div>
+          <div class="cat-pills" id="cat-pills">
+            <div class="cat-pill selected" data-cat="all">
+              <span class="cat-pill-check">✓</span>
+              <span>Tous</span>
+              <span class="cat-pill-count" id="count-all">—</span>
+            </div>
+          </div>
+        </div>
+        <div class="side-divider"></div>
+        <div>
+          <div class="side-section-label">Sources</div>
+          <div id="source-list"></div>
+        </div>
+      </nav>
 
-    <!-- Grid -->
-    <div class="grid" id="grid" role="list" aria-label="Articles"></div>
-
-    <!-- Load more sentinel (infinite scroll) -->
-    <div id="sentinel" style="height:1px;"></div>
+      <!-- Main content -->
+      <div class="main-content">
+        <!-- Errors -->
+        <div id="errors" role="alert" aria-live="assertive"></div>
+        <!-- Grid -->
+        <div class="grid" id="grid" role="list" aria-label="Articles"></div>
+        <!-- Load more sentinel -->
+        <div id="sentinel" style="height:1px;"></div>
+      </div>
+    </div>
   </main>
 </div>
 
@@ -954,7 +1028,7 @@ select option:checked { background: #d0021b; color: #fff; }
 const placeholderImg = 'https://raw.githubusercontent.com/Luklyn/TechWatch/main/public/images/tech-placeholder.jpg';
 
 // ── State ──────────────────────────────────────────────────────────────────
-const state = { type: 'articles', search: '', source: '', period: '' };
+const state = { type: 'articles', search: '', source: '', period: '', categories: [] };
 let debounceTimer = null;
 let allItems      = [];
 let displayedCount = 0;
@@ -986,6 +1060,8 @@ const btnClose      = document.getElementById('btn-close-modal');
 const btnTTS        = document.getElementById('btn-tts');
 const btnFilterToggle = document.getElementById('btn-filter-toggle');
 const toolbarFilters  = document.getElementById('toolbar-filters');
+const catPillsEl      = document.getElementById('cat-pills');
+const sourceListEl    = document.getElementById('source-list');
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 function relativeTime(ts) {
@@ -1032,52 +1108,29 @@ function cardHTML(item, idx) {
   const thumb = `<img class="card-thumb" src="${escHtml(imgUrl)}" alt="${escHtml(item.title)}" loading="lazy" onerror="this.closest('.card-thumb-wrap').innerHTML='<div class=\\'card-thumb-placeholder\\'>${item.is_video ? '▶' : '📰'}</div>'"/>`;
   const summary = item.summary
     ? `<p class="card-summary">${escHtml(item.summary)}</p>` : '';
-  const cid = 'c' + idx + Date.now().toString(36);
   return `
-    <div style="animation: fadeUp 0.35s ease both; animation-delay:${(idx % PAGE_SIZE) * 35}ms; min-height:300px;">
-      <div class="card-scene">
-        <div class="card-3d" id="${cid}">
-          <article class="card"
-            data-url="${escHtml(item.link)}"
-            data-title="${escHtml(item.title)}"
-            data-source="${escHtml(item.source)}"
-            data-date="${escHtml(item.date_display)}"
-            data-is-video="${item.is_video ? '1' : '0'}"
-            data-cid="${cid}"
-            role="listitem"
-            tabindex="0"
-            aria-label="${escHtml(item.title)}">
-            <div class="card-thumb-wrap">${thumb}</div>
-            <div class="card-body">
-              <span class="card-source">${escHtml(item.source)}</span>
-              <h2 class="card-title">${escHtml(item.title)}</h2>
-              ${summary}
-              <div class="card-footer">
-                <span class="card-date">📅 ${item.date_display}</span>
-                <button class="btn-get-summary" data-url="${escHtml(item.link)}" data-title="${escHtml(item.title)}" data-source="${escHtml(item.source)}" data-date="${escHtml(item.date_display)}" data-is-video="${item.is_video ? '1' : '0'}">
-                  ✦ Résumé IA
-                </button>
-              </div>
-            </div>
-          </article>
-          <div class="card-back-face">
-            <div class="card-back-blur">
-              <div class="card-thumb-wrap">${thumb}</div>
-              <div style="padding:12px 14px">
-                <div style="font-size:9.5px;color:var(--red);font-weight:700;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:6px">${escHtml(item.source)}</div>
-                <div style="font-size:13.5px;font-weight:600;color:var(--text);line-height:1.45">${escHtml(item.title)}</div>
-              </div>
-            </div>
-            <div class="card-back-body">
-              <span class="read-badge">✓ Lu</span>
-              <span class="back-source">${escHtml(item.source)} · ${item.date_display}</span>
-              <span class="back-title">${escHtml(item.title)}</span>
-              <button class="btn-unread" data-cid="${cid}" aria-label="Marquer comme non lu">↩ Marquer comme non lu</button>
-            </div>
-          </div>
+    <article class="card" style="animation-delay:${(idx % PAGE_SIZE) * 35}ms"
+      data-url="${escHtml(item.link)}"
+      data-title="${escHtml(item.title)}"
+      data-source="${escHtml(item.source)}"
+      data-date="${escHtml(item.date_display)}"
+      data-is-video="${item.is_video ? '1' : '0'}"
+      role="listitem"
+      tabindex="0"
+      aria-label="${escHtml(item.title)}">
+      <div class="card-thumb-wrap">${thumb}</div>
+      <div class="card-body">
+        <span class="card-source">${escHtml(item.source)}</span>
+        <h2 class="card-title">${escHtml(item.title)}</h2>
+        ${summary}
+        <div class="card-footer">
+          <span class="card-date">📅 ${item.date_display}</span>
+          <button class="btn-get-summary" data-url="${escHtml(item.link)}" data-title="${escHtml(item.title)}" data-source="${escHtml(item.source)}" data-date="${escHtml(item.date_display)}" data-is-video="${item.is_video ? '1' : '0'}">
+            ✦ Résumé IA
+          </button>
         </div>
       </div>
-    </div>`;
+    </article>`;
 }
 
 // ── Read state ─────────────────────────────────────────────────────────────
@@ -1094,11 +1147,7 @@ function markAsRead(url) {
 function applyReadState() {
   const read = getReadSet();
   grid.querySelectorAll('.card[data-url]').forEach(card => {
-    if (read.has(card.dataset.url)) {
-      card.classList.add('read');
-      const card3d = document.getElementById(card.dataset.cid);
-      if (card3d) card3d.classList.add('flipped');
-    }
+    if (read.has(card.dataset.url)) card.classList.add('read');
   });
 }
 
@@ -1264,19 +1313,17 @@ function attachCardEventListeners() {
   grid.querySelectorAll('.card').forEach(card => {
     card.addEventListener('click', (e) => {
       if (e.target.closest('.btn-get-summary')) return;
+      
       markAsRead(card.dataset.url);
       card.classList.add('read');
-      const card3d = document.getElementById(card.dataset.cid);
-      if (card3d) card3d.classList.add('flipped');
       window.open(card.dataset.url, '_blank');
     });
+
     card.addEventListener('keydown', (e) => {
       if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('.btn-get-summary')) {
         e.preventDefault();
         markAsRead(card.dataset.url);
         card.classList.add('read');
-        const card3d = document.getElementById(card.dataset.cid);
-        if (card3d) card3d.classList.add('flipped');
         window.open(card.dataset.url, '_blank');
       }
     });
@@ -1286,6 +1333,7 @@ function attachCardEventListeners() {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
+      
       const item = {
         url:      btn.dataset.url,
         title:    btn.dataset.title,
@@ -1293,23 +1341,8 @@ function attachCardEventListeners() {
         date:     btn.dataset.date,
         is_video: btn.dataset.isVideo === '1',
       };
+      
       openModal(item);
-    });
-  });
-
-  grid.querySelectorAll('.btn-unread').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const card3d = document.getElementById(btn.dataset.cid);
-      if (!card3d) return;
-      card3d.classList.remove('flipped');
-      const article = card3d.querySelector('.card');
-      if (article) {
-        article.classList.remove('read');
-        const read = getReadSet();
-        read.delete(article.dataset.url);
-        localStorage.setItem(READ_KEY, JSON.stringify([...read].slice(-500)));
-      }
     });
   });
 }
@@ -1332,6 +1365,7 @@ async function load(forceRefresh = false) {
   const params = new URLSearchParams({
     type: state.type, search: state.search,
     source: state.source, period: state.period,
+    category: state.categories.length ? state.categories.join(',') : '',
     refresh: forceRefresh ? '1' : '0',
   });
 
@@ -1356,6 +1390,68 @@ async function load(forceRefresh = false) {
       data.sources.map(s =>
         `<option value="${s}"${s === state.source ? ' selected' : ''}>${s}</option>`
       ).join('');
+
+    // ── Render side menu categories ──────────────────────────────────────
+    if (data.categories && catPillsEl) {
+      const allCats = data.categories;
+      // Count per category from all items (unfiltered)
+      const catCounts = {};
+      allCats.forEach(c => catCounts[c] = 0);
+      (data.all_items || data.items).forEach(item => {
+        const c = item.category || 'Autre';
+        if (catCounts[c] !== undefined) catCounts[c]++;
+      });
+      const totalCount = data.total;
+      // Rebuild pills
+      catPillsEl.innerHTML = `
+        <div class="cat-pill${state.categories.length === 0 ? ' selected' : ''}" data-cat="all">
+          <span class="cat-pill-check">${state.categories.length === 0 ? '✓' : ''}</span>
+          <span>Tous</span>
+          <span class="cat-pill-count">${totalCount}</span>
+        </div>
+        ${allCats.map(c => `
+        <div class="cat-pill${state.categories.includes(c) ? ' selected' : ''}" data-cat="${escHtml(c)}">
+          <span class="cat-pill-check">${state.categories.includes(c) ? '✓' : ''}</span>
+          <span>${escHtml(c)}</span>
+          <span class="cat-pill-count">${catCounts[c] || 0}</span>
+        </div>`).join('')}`;
+      // Attach click handlers
+      catPillsEl.querySelectorAll('.cat-pill').forEach(pill => {
+        pill.addEventListener('click', () => {
+          const cat = pill.dataset.cat;
+          if (cat === 'all') {
+            state.categories = [];
+          } else {
+            const idx = state.categories.indexOf(cat);
+            if (idx === -1) state.categories.push(cat);
+            else state.categories.splice(idx, 1);
+          }
+          load();
+        });
+      });
+    }
+
+    // ── Render side menu sources ─────────────────────────────────────────
+    if (sourceListEl) {
+      sourceListEl.innerHTML = `
+        <div class="side-item${state.source === '' ? ' active' : ''}" data-src="">
+          <div class="side-item-dot"></div>
+          <span class="side-item-label">Toutes</span>
+          <span class="side-item-count">${data.total}</span>
+        </div>
+        ${data.sources.map(s => `
+        <div class="side-item${state.source === s ? ' active' : ''}" data-src="${escHtml(s)}">
+          <div class="side-item-dot"></div>
+          <span class="side-item-label">${escHtml(s)}</span>
+        </div>`).join('')}`;
+      sourceListEl.querySelectorAll('.side-item').forEach(item => {
+        item.addEventListener('click', () => {
+          state.source = item.dataset.src;
+          sourceEl.value = item.dataset.src;
+          load();
+        });
+      });
+    }
 
     data.errors.forEach(e => {
       errorsEl.innerHTML += `<div class="error-banner">⚠️ ${escHtml(e)}</div>`;
