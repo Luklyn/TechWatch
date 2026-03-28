@@ -895,6 +895,115 @@ select option:checked { background: #d0021b; color: #fff; }
   .side-menu { display: none; }
   .main-content { padding-left: 0; }
 }
+
+/* ── Digest IA button ────────────────────────────────────────────────────── */
+.btn-digest {
+  height: 44px;
+  padding: 0 16px;
+  background: rgba(208,2,27,0.08);
+  border: 1px solid rgba(208,2,27,0.25);
+  border-radius: var(--radius);
+  color: var(--red);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background var(--transition), border-color var(--transition);
+}
+.btn-digest:hover { background: rgba(208,2,27,0.15); border-color: var(--red); }
+.btn-digest:focus-visible { outline: 2px solid #4a90d9; outline-offset: 2px; }
+.btn-digest-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--red);
+  flex-shrink: 0;
+}
+
+/* ── Side menu period filters ─────────────────────────────────────────────── */
+.period-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.period-item {
+  display: flex;
+  align-items: center;
+  padding: 7px 16px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--muted);
+  border-left: 2px solid transparent;
+  transition: background-color var(--transition), color var(--transition);
+}
+.period-item:hover { background: var(--surface2); }
+.period-item.active {
+  border-left-color: var(--red);
+  color: var(--text);
+  font-weight: 600;
+  background: var(--surface);
+}
+
+/* ── Digest modal ─────────────────────────────────────────────────────────── */
+.digest-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.82);
+  backdrop-filter: blur(6px);
+  z-index: 100;
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.digest-backdrop.open { opacity: 1; pointer-events: all; }
+.digest-modal {
+  background: var(--surface);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  width: 100%; max-width: 680px; max-height: 88vh;
+  overflow-y: auto;
+  display: flex; flex-direction: column;
+  transform: translateY(20px) scale(0.97);
+  transition: transform 0.25s ease;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.7);
+}
+.digest-backdrop.open .digest-modal { transform: translateY(0) scale(1); }
+.digest-header {
+  padding: 22px 24px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0;
+  background: var(--surface);
+  border-radius: 16px 16px 0 0;
+  z-index: 1;
+}
+.digest-header-left { display: flex; align-items: center; gap: 10px; }
+.digest-title {
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  color: var(--text);
+  font-weight: 400;
+}
+.digest-date { font-size: 11px; color: var(--muted); }
+.digest-body { padding: 24px; flex: 1; }
+.digest-content {
+  font-size: 14.5px;
+  line-height: 1.8;
+  color: var(--text-secondary);
+  min-height: 120px;
+}
+.digest-content.loading { color: var(--muted); font-style: italic; }
+.digest-footer {
+  padding: 16px 24px 22px;
+  border-top: 1px solid var(--border);
+  display: flex; justify-content: flex-end;
+}
 </style>
 </head>
 <body>
@@ -925,25 +1034,21 @@ select option:checked { background: #d0021b; color: #fff; }
       <div class="toolbar" role="search">
         <div class="search-wrap">
           <span class="search-icon" aria-hidden="true">🔍</span>
-          <label for="search" class="sr-only">Rechercher un article (minimum 2 caractères)</label>
+          <label for="search" class="sr-only">Rechercher un article</label>
           <input type="text" id="search" placeholder="Rechercher…" autocomplete="off" aria-label="Rechercher un article">
         </div>
-        <div class="toolbar-filters" id="toolbar-filters">
-          <label for="filter-source" class="sr-only">Filtrer par source</label>
-          <select id="filter-source" aria-label="Filtrer par source">
-            <option value="">Toutes les sources</option>
-          </select>
-          <label for="filter-period" class="sr-only">Filtrer par période</label>
-          <select id="filter-period" aria-label="Filtrer par période">
-            <option value="">Toutes les dates</option>
-            <option value="today">Aujourd'hui</option>
-            <option value="week">Cette semaine</option>
-            <option value="month">Ce mois</option>
-          </select>
-        </div>
-        <button class="btn-filter-toggle" id="btn-filter-toggle" aria-expanded="false" aria-controls="toolbar-filters">
-          <span class="filter-chevron">▼</span> Filtres
+        <button class="btn-digest" id="btn-digest" aria-label="Générer le digest IA du jour">
+          <span class="btn-digest-dot"></span>
+          Digest IA du jour
         </button>
+        <!-- Selects cachés mais gardés pour la logique JS existante -->
+        <select id="filter-source" style="display:none" aria-hidden="true"><option value="">Toutes les sources</option></select>
+        <select id="filter-period" style="display:none" aria-hidden="true">
+          <option value="">Toutes les dates</option>
+          <option value="today">Aujourd'hui</option>
+          <option value="week">Cette semaine</option>
+          <option value="month">Ce mois</option>
+        </select>
       </div>
 
       <!-- Meta -->
@@ -972,6 +1077,16 @@ select option:checked { background: #d0021b; color: #fff; }
         </div>
         <div class="side-divider"></div>
         <div>
+          <div class="side-section-label">Période</div>
+          <div class="period-filter" id="period-filter">
+            <div class="period-item active" data-period="">Toutes les dates</div>
+            <div class="period-item" data-period="today">Aujourd'hui</div>
+            <div class="period-item" data-period="week">Cette semaine</div>
+            <div class="period-item" data-period="month">Ce mois</div>
+          </div>
+        </div>
+        <div class="side-divider"></div>
+        <div>
           <div class="side-section-label">Sources</div>
           <div id="source-list"></div>
         </div>
@@ -988,6 +1103,25 @@ select option:checked { background: #d0021b; color: #fff; }
       </div>
     </div>
   </main>
+</div>
+
+<!-- Digest IA modal -->
+<div class="digest-backdrop" id="digest-backdrop">
+  <div class="digest-modal" role="dialog" aria-modal="true" aria-labelledby="digest-title">
+    <div class="digest-header">
+      <div class="digest-header-left">
+        <span class="modal-ai-dot" id="digest-ai-dot"></span>
+        <h2 class="digest-title" id="digest-title">Digest IA du jour</h2>
+      </div>
+      <span class="digest-date" id="digest-date"></span>
+    </div>
+    <div class="digest-body">
+      <p class="digest-content loading" id="digest-content">Génération du digest en cours…</p>
+    </div>
+    <div class="digest-footer">
+      <button class="btn-close-modal" id="btn-close-digest">Fermer</button>
+    </div>
+  </div>
 </div>
 
 <!-- Back to top -->
@@ -1504,11 +1638,71 @@ window.addEventListener('scroll', () => {
 btnTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
 // ── Mobile filter toggle ───────────────────────────────────────────────────
-btnFilterToggle.addEventListener('click', () => {
-  const open = toolbarFilters.classList.toggle('open');
-  btnFilterToggle.classList.toggle('open', open);
-  btnFilterToggle.setAttribute('aria-expanded', open);
-});
+// Period filter in side menu
+const periodFilterEl = document.getElementById('period-filter');
+if (periodFilterEl) {
+  periodFilterEl.querySelectorAll('.period-item').forEach(item => {
+    item.addEventListener('click', () => {
+      periodFilterEl.querySelectorAll('.period-item').forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+      state.period = item.dataset.period;
+      periodEl.value = item.dataset.period;
+      load();
+    });
+  });
+}
+
+// Digest IA
+const btnDigest       = document.getElementById('btn-digest');
+const digestBackdrop  = document.getElementById('digest-backdrop');
+const digestContent   = document.getElementById('digest-content');
+const digestDateEl    = document.getElementById('digest-date');
+const digestAiDot     = document.getElementById('digest-ai-dot');
+const btnCloseDigest  = document.getElementById('btn-close-digest');
+
+async function openDigest() {
+  digestContent.textContent = 'Génération du digest en cours…';
+  digestContent.classList.add('loading');
+  digestDateEl.textContent = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+  digestAiDot.style.animationPlayState = 'running';
+  digestBackdrop.classList.add('open');
+  document.body.style.overflow = 'hidden';
+
+  // Récupérer les titres du jour pour le digest
+  try {
+    const params = new URLSearchParams({ type: state.type, period: 'today', search: '', source: '', category: '' });
+    const res  = await fetch('/api/feed?' + params);
+    const data = await res.json();
+    const titles = data.items.slice(0, 20).map((i, n) => (n+1) + '. ' + i.title).join('\n');
+
+    const r = await fetch('/api/summarize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url: '_digest_',
+        title: 'Digest tech du jour',
+        is_video: false,
+        digest_titles: titles,
+      }),
+    });
+    const d = await r.json();
+    digestContent.textContent = d.summary || 'Impossible de générer le digest.';
+    digestContent.classList.remove('loading');
+    digestAiDot.style.animationPlayState = 'paused';
+  } catch {
+    digestContent.textContent = 'Erreur lors de la génération du digest.';
+    digestContent.classList.remove('loading');
+  }
+}
+
+function closeDigest() {
+  digestBackdrop.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+if (btnDigest) btnDigest.addEventListener('click', openDigest);
+if (btnCloseDigest) btnCloseDigest.addEventListener('click', closeDigest);
+digestBackdrop.addEventListener('click', e => { if (e.target === digestBackdrop) closeDigest(); });
 
 // ── Events ─────────────────────────────────────────────────────────────────
 document.querySelectorAll('.tab').forEach(btn => {
