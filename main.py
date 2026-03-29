@@ -43,6 +43,7 @@ RSS_FEEDS = {
     "9to5Mac":        "https://9to5mac.com/feed/",
     "9to5Google":     "https://9to5google.com/feed/",
     "GamesIndustry":  "https://www.gamesindustry.biz/feed",
+    }
 
 YOUTUBE_CHANNELS = {
     "Gamers Nexus":     "https://www.youtube.com/feeds/videos.xml?channel_id=UChIs72whgZI9w6d6FhwGGHA",
