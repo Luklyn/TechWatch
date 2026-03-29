@@ -1093,7 +1093,15 @@ function openModal(item) {
   .then(data => {
     modalSummary.textContent = data.summary || 'Aucun résumé disponible.';
     modalSummary.classList.remove('loading');
-  })
+    
+    // Si une image a été trouvée, l'afficher
+    if (data.image) {
+        const cardImg = document.querySelector(`[data-url="${item.url}"] .card-thumb`);
+        if (cardImg) {
+            cardImg.src = '/api/img?url=' + encodeURIComponent(data.image);
+        }
+    }
+})
   .catch(() => {
     modalSummary.textContent = 'Erreur lors de la génération du résumé.';
     modalSummary.classList.remove('loading');
