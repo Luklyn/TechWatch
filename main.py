@@ -174,16 +174,14 @@ def categorize_batch(items: list) -> dict:
     # 1. Prompt amélioré avec critères stricts + autorisation "je ne sais pas"
     # 3. Demande d'un score de confiance pour basculer en Autre si faible
     prompt = (
-        f"Catégorise chaque titre en UNE seule catégorie parmi : {categories_str}.\n"
-        f"Utilise '{CATEGORY_OTHER}' si le sujet ne correspond CLAIREMENT à aucune catégorie.\n"
-        f"Critères stricts :\n"
-        f"- Tech : composants PC, GPU, CPU, RAM, stockage, cartes mères, boîtiers, refroidissement, logiciels système\n"
-        f"- Gaming : jeux vidéo, consoles, périphériques gaming, esport\n"
-        f"- Smartphone : téléphones mobiles, tablettes, iOS, Android, applications mobiles\n"
-        f"- {CATEGORY_OTHER} : actualité business, bourse, politique, généraliste, ou sujet ambigu\n"
-        f"Réponds UNIQUEMENT au format strict, une ligne par titre, avec un score de confiance (haute/faible) :\n"
-        f"1. Tech (haute)\n2. {CATEGORY_OTHER} (faible)\netc.\n"
-        f"Titres :\n{items_text}"
+        f"Classify each article title into exactly one category.\n"
+        f"Categories: {categories_str}, {CATEGORY_OTHER}\n"
+        f"Tech=PC hardware(GPU/CPU/RAM/SSD/motherboard/cooling/PSU/case/monitor/driver/OS)\n"
+        f"Gaming=video games/consoles/esport/game releases/gaming peripherals\n"
+        f"Smartphone=phones/tablets/iOS/Android/mobile apps\n"
+        f"{CATEGORY_OTHER}=business/finance/politics/general news/unclear\n"
+        f"Reply ONLY: number.Category, one per line, no explanations. Use {CATEGORY_OTHER} if unsure.\n\n"
+        f"{items_text}"
     )
 
     headers = {"Authorization": f"Bearer {HF_TOKEN}", "Content-Type": "application/json"}
@@ -206,14 +204,11 @@ def categorize_batch(items: list) -> dict:
             if len(parts) == 2:
                 try:
                     idx = int(parts[0].strip()) - 1
-                    rest = parts[1].strip()
-                    # 3. Extraire catégorie et confiance : "Tech (haute)" ou "Tech (faible)"
-                    confidence_low = "faible" in rest.lower()
-                    cat_raw = rest.split("(")[0].strip()
-                    matched = next((c for c in valid if c.lower() in cat_raw.lower()), CATEGORY_OTHER)
-                    # Si confiance faible → forcer Autre
-                    if confidence_low:
-                        matched = CATEGORY_OTHER
+                    cat_raw = parts[1].strip().split("(")[0].strip()
+                    matched = next(
+                        (c for c in valid if c.lower() == cat_raw.lower()),
+                        next((c for c in valid if c.lower() in cat_raw.lower()), CATEGORY_OTHER)
+                    )
                     if 0 <= idx < len(to_llama):
                         result[to_llama[idx]["title"]] = matched
                 except (ValueError, IndexError):
