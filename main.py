@@ -12,6 +12,7 @@ from fastapi.staticfiles import StaticFiles
 from bs4 import BeautifulSoup
 from pathlib import Path
 from fastapi.middleware.cors import CORSMiddleware
+from urllib.parse import urljoin
 
 app = FastAPI()
 
@@ -212,27 +213,48 @@ def scrape_article(url: str) -> tuple[str, str]:
         soup = BeautifulSoup(r.text, "html.parser")
         
         # Récupérer l'image principale
-        img = None
-        # Essayer les balises les plus courantes
+        img_url = None
+        
+        # 1. Chercher og:image (Open Graph - la meilleure source)
         og_image = soup.find("meta", property="og:image")
         if og_image and og_image.get("content"):
-            img = og_image["content"]
-        else:
-            # Fallback : première image dans article/main
-            article = soup.find("article") or soup.find("main")
+            img_url = og_image["content"]
+        
+        # 2. Chercher twitter:image
+        if not img_url:
+            tw_image = soup.find("meta", attrs={"name": "twitter:image"})
+            if tw_image and tw_image.get("content"):
+                img_url = tw_image["content"]
+        
+        # 3. Chercher dans article/main
+        if not img_url:
+            article = soup.find("article") or soup.find("main") or soup.find(class_=re.compile(r"(content|article|post|entry)", re.I))
             if article:
                 img_tag = article.find("img")
-                if img_tag and img_tag.get("src"):
-                    img = img_tag["src"]
+                if img_tag:
+                    # Vérifier data-src (lazy-loading) avant src
+                    img_url = img_tag.get("data-src") or img_tag.get("src")
         
-        # Récupérer le texte (code existant)
+        # 4. Fallback : première image du body
+        if not img_url:
+            img_tag = soup.find("img")
+            if img_tag:
+                img_url = img_tag.get("data-src") or img_tag.get("src")
+        
+        # 5. Convertir les URLs relatives en absolues
+        if img_url and not img_url.startswith("http"):
+            from urllib.parse import urljoin
+            img_url = urljoin(url, img_url)
+        
+        # Récupérer le texte
         for tag in soup(["script", "style", "nav", "footer", "aside", "header", "form", "iframe", "noscript"]):
             tag.decompose()
         main = soup.find("article") or soup.find("main") or soup.find(class_=re.compile(r"(content|article|post|entry)", re.I)) or soup.body
         text = main.get_text(separator="\n", strip=True) if main else ""
         
-        return text[:4000], img or ""
-    except Exception:
+        return text[:4000], img_url or ""
+    except Exception as e:
+        print(f"Erreur scrape_article: {e}")
         return "", ""
 
 def call_hf(text: str, title: str, is_video: bool = False) -> str:
