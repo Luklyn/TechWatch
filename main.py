@@ -39,15 +39,10 @@ HF_URL   = "https://router.huggingface.co/v1/chat/completions"
 RSS_FEEDS = {
     "TechPowerUp":    "https://www.techpowerup.com/rss/news",
     "Hardware & Co":  "https://hardwareand.co/actualites?format=feed&type=rss",
-    "The Verge":      "https://www.theverge.com/tech/rss/index.xml",
     "Ars Technica":   "https://feeds.arstechnica.com/arstechnica/index",
     "9to5Mac":        "https://9to5mac.com/feed/",
     "9to5Google":     "https://9to5google.com/feed/",
-    "FrAndroid":      "https://www.frandroid.com/feed",
     "GamesIndustry":  "https://www.gamesindustry.biz/feed",
-    "Digital Foundry": "https://www.eurogamer.net/feed/digitalfoundry",
-    "Les Numériques": "https://www.lesnumeriques.com/rss.xml",
-}
 
 YOUTUBE_CHANNELS = {
     "Gamers Nexus":     "https://www.youtube.com/feeds/videos.xml?channel_id=UChIs72whgZI9w6d6FhwGGHA",
