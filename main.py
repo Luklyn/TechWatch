@@ -204,25 +204,36 @@ async def api_feed(
 
 # ─── SUMMARIZE ────────────────────────────────────────────────────────────────
 
-def scrape_article(url: str) -> str:
-    """Scrape le texte principal d'un article."""
+def scrape_article(url: str) -> tuple[str, str]:
+    """Scrape le texte ET l'image principale d'un article."""
     try:
         r = requests.get(url, headers=HEADERS, timeout=8)
         r.raise_for_status()
         soup = BeautifulSoup(r.text, "html.parser")
-        for tag in soup(["script", "style", "nav", "footer", "aside",
-                          "header", "form", "iframe", "noscript"]):
+        
+        # Récupérer l'image principale
+        img = None
+        # Essayer les balises les plus courantes
+        og_image = soup.find("meta", property="og:image")
+        if og_image and og_image.get("content"):
+            img = og_image["content"]
+        else:
+            # Fallback : première image dans article/main
+            article = soup.find("article") or soup.find("main")
+            if article:
+                img_tag = article.find("img")
+                if img_tag and img_tag.get("src"):
+                    img = img_tag["src"]
+        
+        # Récupérer le texte (code existant)
+        for tag in soup(["script", "style", "nav", "footer", "aside", "header", "form", "iframe", "noscript"]):
             tag.decompose()
-        main = (
-            soup.find("article")
-            or soup.find("main")
-            or soup.find(class_=re.compile(r"(content|article|post|entry)", re.I))
-            or soup.body
-        )
+        main = soup.find("article") or soup.find("main") or soup.find(class_=re.compile(r"(content|article|post|entry)", re.I)) or soup.body
         text = main.get_text(separator="\n", strip=True) if main else ""
-        return text[:4000]
+        
+        return text[:4000], img or ""
     except Exception:
-        return ""
+        return "", ""
 
 def call_hf(text: str, title: str, is_video: bool = False) -> str:
     """Appelle Llama via HuggingFace Inference API et retourne un résumé en français."""
@@ -267,25 +278,22 @@ _summary_cache: dict = {}
 
 @app.post("/api/summarize")
 async def api_summarize(body: dict):
-    try:
-        url   = body.get("url", "")
-        title = body.get("title", "")
-        if not url:
-            return JSONResponse({"error": "URL manquante"}, status_code=400)
+    url = body.get("url", "")
+    title = body.get("title", "")
+    if not url:
+        return JSONResponse({"error": "URL manquante"}, status_code=400)
 
-        if url in _summary_cache:
-            return JSONResponse({"summary": _summary_cache[url], "cached": True})
+    if url in _summary_cache:
+        return JSONResponse({"summary": _summary_cache[url], "cached": True})
 
-        is_video = body.get("is_video", False)
-        text = scrape_article(url)
-        summary = call_hf(text or f"Contenu non lisible pour : {title}", title, is_video=is_video)
+    is_video = body.get("is_video", False)
+    text, image = scrape_article(url)  # ← récupère aussi l'image
+    summary = call_hf(text or f"Contenu non lisible pour : {title}", title, is_video=is_video)
 
-        if not summary.startswith("Impossible"):
-            _summary_cache[url] = summary
+    if not summary.startswith("Impossible"):
+        _summary_cache[url] = summary
 
-        return JSONResponse({"summary": summary})
-    except Exception as e:
-        return JSONResponse({"error": str(e)}, status_code=500)
+    return JSONResponse({"summary": summary, "image": image})  # ← retourne l'image
 
 # ─── IMAGE PROXY ─────────────────────────────────────────────────────────────
 
