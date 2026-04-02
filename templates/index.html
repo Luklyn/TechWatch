@@ -68,11 +68,11 @@ header {
   background: var(--bg);
   border-bottom: 1px solid var(--border);
   padding: 12px 0;
-  margin-bottom: 16px;
+  margin-bottom: 0;
   backdrop-filter: blur(10px);
   transition: background-color var(--theme-transition), border-color var(--theme-transition);
 }
-@media (min-width: 768px) { header { padding: 16px 0; margin-bottom: 24px; } }
+@media (min-width: 768px) { header { padding: 16px 0; } }
 
 .header-inner {
   display: flex;
@@ -144,61 +144,14 @@ header {
 .btn-theme.rotating { animation: sunRotate 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
 @keyframes sunRotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-.toolbar-sticky {
-  position: sticky;
-  top: 73px;
-  z-index: 40;
-  background: var(--bg);
-  padding: 16px 0 0;
-  border-bottom: 1px solid var(--border);
-  backdrop-filter: blur(10px);
-}
-
-.toolbar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 0;
-  flex-wrap: wrap;
-}
-.search-wrap {
-  position: relative;
-  flex: 1;
-  min-width: 0;
-}
-.search-icon {
-  position: absolute;
-  left: 12px; top: 50%;
-  transform: translateY(-50%);
-  color: var(--muted);
-  font-size: 13px;
-  pointer-events: none;
-}
-input[type="text"] {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  color: var(--text);
-  font-family: var(--font-sans);
-  font-size: 13px;
-  padding: 0 14px 0 36px;
-  outline: none;
-  transition: border-color var(--transition), box-shadow var(--transition);
-  width: 100%;
-  height: 44px;
-}
-input[type="text"]:focus {
-  border-color: var(--red);
-  box-shadow: 0 0 0 3px var(--red-glow);
-}
-
 .meta-bar {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin: 12px 0 0;
-  padding-bottom: 12px;
+  padding: 16px 0;
   flex-wrap: wrap;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
 }
 .count-badge {
   font-size: 11px;
@@ -268,7 +221,7 @@ input[type="text"]:focus {
   grid-template-columns: 1fr;
   gap: 20px;
   padding-bottom: 80px;
-  margin-top: 20px;
+  margin-top: 0;
 }
 @media (min-width: 640px) { .grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); } }
 
@@ -398,10 +351,10 @@ input[type="text"]:focus {
   align-items: center;
   gap: 6px;
   padding: 10px 18px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
+  background: var(--red);
+  border: 1px solid var(--red);
   border-radius: 6px;
-  color: var(--muted);
+  color: #fff;
   font-family: var(--font-sans);
   font-size: 11px;
   font-weight: 600;
@@ -411,33 +364,14 @@ input[type="text"]:focus {
   margin-left: auto;
 }
 
-.btn-get-summary .glossy-text {
-  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0) 100%);
-  background-size: 200% 100%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: none;
-  opacity: 0.7;
-}
-
-@keyframes glossShine {
-  0% { background-position: -200% 0; }
-  50% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
 .btn-get-summary:hover {
-  color: var(--red);
-  border-color: var(--red);
-  background: rgba(208,2,27,0.05);
+  background: #b00018;
+  border-color: #b00018;
 }
 
-.btn-get-summary:hover .glossy-text {
-  animation: glossShine 3s ease-in-out infinite;
-  opacity: 1;
-  color: #fff;
-  -webkit-text-fill-color: white;
+.btn-get-summary:focus-visible {
+  outline: 2px solid #4a90d9;
+  outline-offset: 2px;
 }
 
 .card-back-overlay {
@@ -717,6 +651,37 @@ input[type="text"]:focus {
   scrollbar-width: thin;
 }
 
+.search-wrap {
+  position: relative;
+  padding: 0 16px;
+  margin-bottom: 8px;
+}
+.search-icon {
+  position: absolute;
+  left: 28px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: 13px;
+  pointer-events: none;
+}
+.side-search {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  padding: 8px 12px 8px 36px;
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  height: 40px;
+}
+.side-search:focus {
+  border-color: var(--red);
+  box-shadow: 0 0 0 3px var(--red-glow);
+}
+
 .side-section-label {
   font-size: 9px;
   font-weight: 700;
@@ -826,6 +791,10 @@ input[type="text"]:focus {
   <main id="main" tabindex="-1">
     <div class="app-layout">
       <nav class="side-menu" id="side-menu">
+        <div class="search-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="side-search" class="side-search" placeholder="Rechercher..." autocomplete="off">
+        </div>
         <div>
           <div class="side-section-label">Sources</div>
           <div id="source-list"></div>
@@ -843,20 +812,12 @@ input[type="text"]:focus {
       </nav>
 
       <div class="main-content">
-        <div class="toolbar-sticky">
-          <div class="toolbar">
-            <div class="search-wrap">
-              <span class="search-icon">🔍</span>
-              <input type="text" id="search" placeholder="Rechercher un article…" autocomplete="off">
-            </div>
-          </div>
-          <div class="meta-bar">
-            <span class="count-badge" id="count">Chargement…</span>
-            <button class="btn-refresh" id="btn-refresh">
-              <span class="refresh-icon">↻</span> <span class="refresh-text">Actualiser</span>
-            </button>
-            <span class="last-update" id="last-update"></span>
-          </div>
+        <div class="meta-bar">
+          <span class="count-badge" id="count">Chargement…</span>
+          <button class="btn-refresh" id="btn-refresh">
+            <span class="refresh-icon">↻</span> <span class="refresh-text">Actualiser</span>
+          </button>
+          <span class="last-update" id="last-update"></span>
         </div>
 
         <div id="errors"></div>
@@ -909,7 +870,6 @@ const grid = document.getElementById('grid');
 const countBadge = document.getElementById('count');
 const lastUpdate = document.getElementById('last-update');
 const errorsEl = document.getElementById('errors');
-const searchEl = document.getElementById('search');
 const refreshBtn = document.getElementById('btn-refresh');
 const sentinel = document.getElementById('sentinel');
 const btnTop = document.getElementById('btn-top');
@@ -924,6 +884,7 @@ const aiDot = document.getElementById('ai-dot');
 const btnClose = document.getElementById('btn-close-modal');
 const btnTTS = document.getElementById('btn-tts');
 const sourceListEl = document.getElementById('source-list');
+const sideSearchEl = document.getElementById('side-search');
 
 function relativeTime(ts) {
   const delta = Math.floor(Date.now() / 1000 - ts);
@@ -987,7 +948,7 @@ function cardHTML(item, idx) {
               <div class="card-footer">
                 <span class="card-date">📅 ${item.date_display}</span>
                 <button class="btn-get-summary" data-url="${escHtml(item.link)}" data-title="${escHtml(item.title)}" data-source="${escHtml(item.source)}" data-date="${escHtml(item.date_display)}" data-is-video="${item.is_video ? '1' : '0'}">
-                  <span class="glossy-text">✦ Résumé IA</span>
+                  ✦ Résumé IA
                 </button>
               </div>
             </div>
@@ -1094,7 +1055,6 @@ function openModal(item) {
     modalSummary.textContent = data.summary || 'Aucun résumé disponible.';
     modalSummary.classList.remove('loading');
     
-    // Si une image a été trouvée, l'afficher
     if (data.image) {
         const cardImg = document.querySelector(`[data-url="${item.url}"] .card-thumb`);
         if (cardImg) {
@@ -1251,10 +1211,10 @@ document.querySelectorAll('.tab').forEach(btn => {
   });
 });
 
-searchEl.addEventListener('input', () => {
+sideSearchEl.addEventListener('input', () => {
   clearTimeout(debounceTimer);
   debounceTimer = setTimeout(() => {
-    const value = searchEl.value.trim();
+    const value = sideSearchEl.value.trim();
     if (value.length === 0 || value.length >= 2) {
       state.search = value;
       load();
