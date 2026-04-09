@@ -139,7 +139,6 @@ header {
   transition: border-color var(--transition), color var(--transition);
   flex-shrink: 0;
 }
-.btn-theme:hover { border-color: var(--red); color: var(--red); }
 .btn-theme.rotating { animation: sunRotate 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
 @keyframes sunRotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
@@ -229,6 +228,7 @@ header {
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* CARTE SIMPLIFIÉE */
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -238,7 +238,6 @@ header {
   flex-direction: column;
   position: relative;
   transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
-  min-height: 44px;
   cursor: pointer;
   animation: fadeUp 0.35s ease both;
 }
@@ -246,48 +245,48 @@ header {
 .card:hover, .card:focus {
   border-color: rgba(208,2,27,0.6);
   transform: translateY(-4px);
-  box-shadow: 0 16px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(208,2,27,0.1);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.5);
   outline: none;
 }
 
-/* État lu avec flou */
+/* ÉTAT LU : FLOUTAGE */
 .card.is-read .card-content-wrap {
-  filter: blur(4px);
-  opacity: 0.6;
+  filter: blur(5px);
+  opacity: 0.5;
   pointer-events: none;
 }
+
+/* BADGE LU AVEC COCHE */
 .card.is-read::after {
-  content: 'LU';
+  content: '✓ Lu';
   position: absolute;
   top: 50%; left: 50%;
   transform: translate(-50%, -50%);
   background: var(--red);
   color: #fff;
-  font-size: 11px; font-weight: 800;
-  padding: 6px 16px;
-  border-radius: 20px;
-  letter-spacing: 1.5px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-  z-index: 2;
+  font-size: 13px; font-weight: 700;
+  padding: 8px 18px;
+  border-radius: 25px;
+  z-index: 10;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  display: flex; align-items: center; gap: 6px;
+  pointer-events: none;
 }
+
+/* Bouton pour réinitialiser le statut */
 .card .btn-unread {
   position: absolute;
   top: 10px; right: 10px;
-  z-index: 3;
+  z-index: 20;
   opacity: 0;
-  pointer-events: none;
   background: var(--surface2);
   border: 1px solid var(--border);
-  border-radius: 6px;
   color: var(--text);
-  font-size: 10px;
-  padding: 4px 8px;
-  cursor: pointer;
+  font-size: 10px; padding: 4px 8px;
+  border-radius: 6px; cursor: pointer;
+  transition: opacity 0.2s;
 }
-.card.is-read:hover .btn-unread {
-  opacity: 1;
-  pointer-events: all;
-}
+.card.is-read:hover .btn-unread { opacity: 1; }
 
 .card-thumb-wrap {
   width: 100%;
@@ -304,13 +303,6 @@ header {
   transition: transform 0.4s ease;
 }
 .card:hover .card-thumb { transform: scale(1.03); }
-.card-thumb-placeholder {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, var(--surface2) 0%, #252525 100%);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 36px; opacity: 0.35;
-}
 
 .card-body {
   padding: 14px 16px;
@@ -346,37 +338,28 @@ header {
   gap: 8px;
   border-top: 1px solid var(--border);
   padding-top: 10px; margin-top: 4px;
-  flex-wrap: wrap;
 }
 .card-date {
   font-size: 13px;
   color: var(--text-secondary);
-  letter-spacing: 0.2px;
 }
 
 .btn-get-summary {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 10px 18px;
+  padding: 8px 14px;
   background: var(--red);
-  border: 1px solid var(--red);
+  border: none;
   border-radius: 6px;
   color: #fff;
-  font-family: var(--font-sans);
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
-  transition: all var(--transition);
-  white-space: nowrap;
   margin-left: auto;
 }
 
-.btn-get-summary:hover {
-  background: #b00018;
-  border-color: #b00018;
-}
-
+/* SKELETONS */
 .skeleton {
   background: linear-gradient(90deg, var(--surface) 25%, var(--surface2) 50%, var(--surface) 75%);
   background-size: 200% 100%;
@@ -405,12 +388,6 @@ header {
   color: var(--muted);
 }
 .state-icon { font-size: 48px; margin-bottom: 16px; }
-.state h3 {
-  font-family: var(--font-serif);
-  font-size: 1.4rem; color: var(--text);
-  margin-bottom: 8px; font-weight: 400;
-}
-.state p { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
 
 .btn-top {
   position: fixed;
@@ -425,259 +402,59 @@ header {
   display: flex; align-items: center; justify-content: center;
   box-shadow: 0 4px 16px rgba(208,2,27,0.4);
   opacity: 0; pointer-events: none;
-  transform: translateY(10px);
-  transition: opacity 0.25s ease, transform 0.25s ease;
   z-index: 90;
-  margin-bottom: 20px;
+  transition: 0.25s ease;
 }
-.btn-top.visible { opacity: 1; pointer-events: all; transform: translateY(0); }
-.btn-top:hover { background: #b00018; }
+.btn-top.visible { opacity: 1; pointer-events: all; }
 
+/* MODAL */
 .modal-backdrop {
   position: fixed; inset: 0;
-  background: rgba(0,0,0,0.82);
+  background: rgba(0,0,0,0.85);
   backdrop-filter: blur(6px);
   z-index: 100;
   display: flex; align-items: center; justify-content: center;
   padding: 24px;
   opacity: 0; pointer-events: none;
-  transition: opacity 0.25s ease;
+  transition: 0.25s ease;
 }
 .modal-backdrop.open { opacity: 1; pointer-events: all; }
 .modal {
   background: var(--surface);
-  border: 1px solid rgba(255,255,255,0.1);
   border-radius: 16px;
   width: 100%; max-width: 640px; max-height: 88vh;
   overflow-y: auto;
   display: flex; flex-direction: column;
-  transform: translateY(20px) scale(0.97);
-  transition: transform 0.25s ease;
   box-shadow: 0 32px 80px rgba(0,0,0,0.7);
 }
-.modal-backdrop.open .modal { transform: translateY(0) scale(1); }
-.modal-header {
-  padding: 22px 24px 16px;
-  border-bottom: 1px solid var(--border);
-  display: flex; flex-direction: column; gap: 8px;
-  position: sticky; top: 0;
-  background: var(--surface);
-  border-radius: 16px 16px 0 0;
-  z-index: 1;
-}
-.modal-source {
-  font-size: 10px; font-weight: 700;
-  letter-spacing: 1.2px; text-transform: uppercase;
-  color: var(--red);
-}
-.modal-title {
-  font-family: var(--font-serif);
-  font-size: 1.25rem; color: var(--text);
-  line-height: 1.4; font-weight: 400;
-}
-.modal-meta { font-size: 11px; color: var(--muted); }
-.modal-body { padding: 24px; flex: 1; }
-.modal-ai-label {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 10px; font-weight: 700;
-  letter-spacing: 1px; text-transform: uppercase;
-  color: var(--muted); margin-bottom: 14px;
-}
-.modal-ai-dot {
-  width: 6px; height: 6px;
-  border-radius: 50%; background: var(--red);
-  animation: pulse 1.5s ease infinite;
-}
-@keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(0.7); }
-}
-.modal-summary {
-  font-size: 14.5px; line-height: 1.75;
-  color: var(--text-secondary); min-height: 80px;
-}
-.modal-summary.loading { color: var(--muted); font-style: italic; }
-.modal-footer {
-  padding: 16px 24px 22px;
-  border-top: 1px solid var(--border);
-  display: flex; align-items: center;
-  justify-content: space-between;
-  gap: 12px; flex-wrap: wrap;
-}
-.btn-original {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 10px 20px;
-  background: var(--red); color: #fff;
-  border: none; border-radius: 8px;
-  font-family: var(--font-sans); font-size: 13px; font-weight: 700;
-  cursor: pointer; text-decoration: none;
-  transition: background var(--transition), transform var(--transition);
-  min-height: 44px;
-}
-.btn-original:hover { background: #b00018; transform: translateY(-1px); }
-
-.btn-tts {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 44px; height: 44px;
-  padding: 0;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--muted);
-  font-size: 18px;
-  cursor: pointer;
-  transition: all var(--transition);
-  flex-shrink: 0;
-}
-.btn-tts:hover {
-  color: var(--red);
-  border-color: var(--red);
-  background: rgba(208,2,27,0.05);
-}
+.modal-header { padding: 22px 24px 16px; border-bottom: 1px solid var(--border); }
+.modal-source { font-size: 10px; font-weight: 700; color: var(--red); text-transform: uppercase; }
+.modal-title { font-family: var(--font-serif); font-size: 1.25rem; margin: 8px 0; }
+.modal-body { padding: 24px; }
+.modal-ai-label { display: flex; align-items: center; gap: 8px; font-size: 10px; font-weight: 700; color: var(--muted); margin-bottom: 14px; }
+.modal-summary { font-size: 14.5px; line-height: 1.75; color: var(--text-secondary); }
+.modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; }
+.btn-original { background: var(--red); color: #fff; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 13px; }
+.btn-tts { width: 44px; height: 44px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--muted); cursor: pointer; }
 .btn-tts.playing { color: var(--red); border-color: var(--red); }
 
-.btn-close-modal {
-  padding: 10px 16px; min-height: 44px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 8px; color: var(--muted);
-  font-family: var(--font-sans); font-size: 13px;
-  cursor: pointer; transition: all var(--transition);
-}
-.btn-close-modal:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
-
-.app-layout {
-  display: flex;
-  align-items: flex-start;
-  gap: 0;
-}
-
+/* LAYOUT MENU */
+.app-layout { display: flex; align-items: flex-start; }
 .side-menu {
-  width: 240px;
-  flex-shrink: 0;
-  position: sticky;
-  top: 73px;
-  padding: 20px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  border-right: 1px solid var(--border);
-  max-height: calc(100vh - 73px);
-  overflow-y: auto;
-  scrollbar-width: thin;
+  width: 240px; flex-shrink: 0; position: sticky; top: 73px;
+  padding: 20px 0; display: flex; flex-direction: column; gap: 24px;
+  border-right: 1px solid var(--border); max-height: calc(100vh - 73px); overflow-y: auto;
 }
-
-.search-wrap {
-  position: relative;
-  padding: 0 16px;
-  margin-bottom: 8px;
-}
-.search-icon {
-  position: absolute;
-  left: 28px; top: 50%;
-  transform: translateY(-50%);
-  color: var(--muted);
-  font-size: 13px;
-  pointer-events: none;
-}
+.search-wrap { position: relative; padding: 0 16px; }
 .side-search {
-  width: 100%;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  color: var(--text);
-  font-family: var(--font-sans);
-  font-size: 13px;
-  padding: 8px 12px 8px 36px;
-  outline: none;
-  transition: border-color var(--transition), box-shadow var(--transition);
-  height: 40px;
+  width: 100%; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--text); padding: 8px 12px 8px 36px; outline: none;
 }
-.side-search:focus {
-  border-color: var(--red);
-  box-shadow: 0 0 0 3px var(--red-glow);
-}
-
-.side-section-label {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 1.8px;
-  text-transform: uppercase;
-  color: var(--muted);
-  padding: 0 16px;
-  margin-bottom: 6px;
-}
-.side-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 16px;
-  cursor: pointer;
-  transition: background-color var(--transition), color var(--transition);
-  border-radius: 6px;
-  margin: 0 8px;
-}
-.side-item:hover { background: var(--surface2); }
+.side-section-label { font-size: 9px; font-weight: 700; letter-spacing: 1.8px; text-transform: uppercase; color: var(--muted); padding: 0 16px; margin-bottom: 6px; }
+.side-item { display: flex; align-items: center; gap: 10px; padding: 8px 16px; cursor: pointer; border-radius: 6px; margin: 0 8px; }
 .side-item.active { background: rgba(208,2,27,0.18); }
-.side-item-dot {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: var(--dim);
-  flex-shrink: 0;
-}
-.side-item.active .side-item-dot { background: var(--red); }
-.side-item-label {
-  font-size: 13px;
-  color: var(--muted);
-  font-family: var(--font-sans);
-  flex: 1;
-}
 .side-item.active .side-item-label { color: var(--text); font-weight: 600; }
-.side-item-count {
-  font-size: 10px;
-  color: #fff;
-  background: var(--surface2);
-  padding: 1px 7px;
-  border-radius: 10px;
-  font-family: var(--font-sans);
-  font-weight: 600;
-}
-.side-item.active .side-item-count { background: rgba(208,2,27,0.35); }
-.side-divider {
-  height: 1px;
-  background: var(--border);
-  margin: 0;
-}
-
-.period-filter {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.period-item {
-  display: flex;
-  align-items: center;
-  padding: 8px 16px;
-  cursor: pointer;
-  font-family: var(--font-sans);
-  font-size: 13px;
-  color: var(--muted);
-  border-radius: 6px;
-  margin: 0 8px;
-  transition: background-color var(--transition), color var(--transition);
-}
-.period-item:hover { background: var(--surface2); }
-.period-item.active {
-  background: var(--surface2);
-  color: var(--text);
-  font-weight: 600;
-}
-
-.main-content {
-  flex: 1;
-  min-width: 0;
-  padding-left: 28px;
-}
+.main-content { flex: 1; min-width: 0; padding-left: 28px; }
 
 @media (max-width: 768px) {
   .side-menu { display: none; }
@@ -694,35 +471,32 @@ header {
         <h1 class="logo-eyebrow">Tech Watch</h1>
         <span class="logo-title">Ma revue de presse tech</span>
       </div>
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0;">
+      <div style="display:flex;align-items:center;gap:10px;">
         <div class="tabs" id="main-tabs">
-          <button class="tab active" data-type="articles">Articles presse</button>
-          <button class="tab" data-type="videos">Vidéos YouTube</button>
+          <button class="tab active" data-type="articles">Articles</button>
+          <button class="tab" data-type="videos">YouTube</button>
         </div>
         <button class="btn-theme" id="btn-theme">🌙</button>
       </div>
     </div>
   </header>
 
-  <main id="main" tabindex="-1">
+  <main id="main">
     <div class="app-layout">
       <nav class="side-menu" id="side-menu">
         <div class="search-wrap">
-          <span class="search-icon">🔍</span>
-          <input type="text" id="side-search" class="side-search" placeholder="Rechercher..." autocomplete="off">
+          <input type="text" id="side-search" class="side-search" placeholder="Rechercher...">
         </div>
         <div>
           <div class="side-section-label">Sources</div>
           <div id="source-list"></div>
         </div>
-        <div class="side-divider"></div>
         <div>
           <div class="side-section-label">Période</div>
           <div class="period-filter" id="period-filter">
-            <div class="period-item active" data-period="">Toutes les dates</div>
-            <div class="period-item" data-period="today">Aujourd'hui</div>
-            <div class="period-item" data-period="week">Cette semaine</div>
-            <div class="period-item" data-period="month">Ce mois</div>
+            <div class="side-item active" data-period="">Toutes</div>
+            <div class="side-item" data-period="today">Aujourd'hui</div>
+            <div class="side-item" data-period="week">Semaine</div>
           </div>
         </div>
       </nav>
@@ -730,12 +504,9 @@ header {
       <div class="main-content">
         <div class="meta-bar">
           <span class="count-badge" id="count">Chargement…</span>
-          <button class="btn-refresh" id="btn-refresh">
-            <span class="refresh-icon">↻</span> <span class="refresh-text">Actualiser</span>
-          </button>
+          <button class="btn-refresh" id="btn-refresh">↻ Actualiser</button>
           <span class="last-update" id="last-update"></span>
         </div>
-
         <div id="errors"></div>
         <div class="grid" id="grid"></div>
         <div id="sentinel" style="height:1px;"></div>
@@ -745,410 +516,161 @@ header {
 </div>
 
 <button class="btn-top" id="btn-top">↑</button>
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="toast" id="toast"></div>
 
 <div class="modal-backdrop" id="modal-backdrop">
-  <div class="modal" role="dialog" aria-modal="true">
+  <div class="modal">
     <div class="modal-header">
       <span class="modal-source" id="modal-source"></span>
       <h2 class="modal-title" id="modal-title-el"></h2>
-      <span class="modal-meta" id="modal-meta"></span>
     </div>
     <div class="modal-body">
-      <div class="modal-ai-label">
-        <span class="modal-ai-dot" id="ai-dot"></span>
-        Résumé par IA
-      </div>
-      <p class="modal-summary loading" id="modal-summary">Analyse en cours…</p>
+      <div class="modal-ai-label">Résumé par IA</div>
+      <p class="modal-summary" id="modal-summary"></p>
     </div>
     <div class="modal-footer">
-      <div style="display: flex; gap: 12px; align-items: center;">
-        <a class="btn-original" id="modal-link" href="#" target="_blank" rel="noopener noreferrer">↗ Lire l'article</a>
-        <button class="btn-tts" id="btn-tts">🔊</button>
-      </div>
+      <a class="btn-original" id="modal-link" href="#" target="_blank">↗ Lire</a>
+      <button class="btn-tts" id="btn-tts">🔊</button>
       <button class="btn-close-modal" id="btn-close-modal">Fermer</button>
     </div>
   </div>
 </div>
 
 <script>
-const placeholderImg = 'https://raw.githubusercontent.com/Luklyn/TechWatch/main/public/images/tech-placeholder.jpg';
-
 const state = { type: 'articles', search: '', source: '', period: '' };
-let debounceTimer = null;
 let allItems = [];
 let displayedCount = 0;
 const PAGE_SIZE = 20;
-let loadTimeout = null;
-const LOAD_TIMEOUT_MS = 5000;
 
 const grid = document.getElementById('grid');
 const countBadge = document.getElementById('count');
 const lastUpdate = document.getElementById('last-update');
-const errorsEl = document.getElementById('errors');
 const refreshBtn = document.getElementById('btn-refresh');
-const sentinel = document.getElementById('sentinel');
-const btnTop = document.getElementById('btn-top');
-const toast = document.getElementById('toast');
-const backdrop = document.getElementById('modal-backdrop');
-const modalSource = document.getElementById('modal-source');
-const modalTitleEl = document.getElementById('modal-title-el');
-const modalMeta = document.getElementById('modal-meta');
-const modalSummary = document.getElementById('modal-summary');
-const modalLink = document.getElementById('modal-link');
-const aiDot = document.getElementById('ai-dot');
-const btnClose = document.getElementById('btn-close-modal');
-const btnTTS = document.getElementById('btn-tts');
-const sourceListEl = document.getElementById('source-list');
 const sideSearchEl = document.getElementById('side-search');
-
-function relativeTime(ts) {
-  const delta = Math.floor(Date.now() / 1000 - ts);
-  if (delta < 60) return "à l'instant";
-  if (delta < 3600) return `il y a ${Math.floor(delta / 60)} min`;
-  return `il y a ${Math.floor(delta / 3600)} h`;
-}
-
-function escHtml(str) {
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-function proxyImg(url, isVideo) {
-  if (isVideo || !url) return url;
-  return '/api/img?url=' + encodeURIComponent(url);
-}
-
-function showToast(msg) {
-  toast.textContent = msg;
-  toast.classList.add('show');
-  setTimeout(() => toast.classList.remove('show'), 2800);
-}
-
-function skeletons(n = PAGE_SIZE) {
-  return Array(n).fill(`
-    <div class="card-skeleton">
-      <div class="skeleton sk-img"></div>
-      <div class="sk-body">
-        <div class="skeleton sk-src"></div>
-        <div class="skeleton sk-t1"></div>
-        <div class="skeleton sk-t2"></div>
-        <div class="skeleton sk-sum"></div>
-        <div class="skeleton sk-date"></div>
-      </div>
-    </div>`).join('');
-}
-
-function cardHTML(item, idx) {
-  const imgSrc = proxyImg(item.image, item.is_video);
-  const imgUrl = imgSrc || placeholderImg;
-  const thumb = `<img class="card-thumb" src="${escHtml(imgUrl)}" alt="${escHtml(item.title)}" loading="lazy" onerror="this.closest('.card-thumb-wrap').innerHTML='<div class=\\'card-thumb-placeholder\\'>${item.is_video ? '▶' : '📰'}</div>'"/>`;
-  const summary = item.summary ? `<p class="card-summary">${escHtml(item.summary)}</p>` : '';
-  
-  return `
-    <article class="card"
-      data-url="${escHtml(item.link)}"
-      data-title="${escHtml(item.title)}"
-      data-source="${escHtml(item.source)}"
-      data-date="${escHtml(item.date_display)}"
-      data-is-video="${item.is_video ? '1' : '0'}"
-      style="animation-delay:${(idx % PAGE_SIZE) * 35}ms"
-      tabindex="0">
-      
-      <button class="btn-unread" data-url="${escHtml(item.link)}">↩ Réinitialiser</button>
-      
-      <div class="card-content-wrap">
-        <div class="card-thumb-wrap">${thumb}</div>
-        <div class="card-body">
-          <span class="card-source">${escHtml(item.source)}</span>
-          <h2 class="card-title">${escHtml(item.title)}</h2>
-          ${summary}
-          <div class="card-footer">
-            <span class="card-date">📅 ${item.date_display}</span>
-            <button class="btn-get-summary" data-url="${escHtml(item.link)}" data-title="${escHtml(item.title)}" data-source="${escHtml(item.source)}" data-date="${escHtml(item.date_display)}" data-is-video="${item.is_video ? '1' : '0'}">
-              ✦ Résumé IA
-            </button>
-          </div>
-        </div>
-      </div>
-    </article>`;
-}
+const sourceListEl = document.getElementById('source-list');
+const backdrop = document.getElementById('modal-backdrop');
+const modalSummary = document.getElementById('modal-summary');
 
 const READ_KEY = 'read_articles';
 function getReadSet() {
   try { return new Set(JSON.parse(localStorage.getItem(READ_KEY) || '[]')); }
   catch { return new Set(); }
 }
+
 function markAsRead(url) {
   const read = getReadSet();
   read.add(url);
   localStorage.setItem(READ_KEY, JSON.stringify([...read].slice(-500)));
 }
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function cardHTML(item) {
+  return `
+    <article class="card" data-url="${escHtml(item.link)}">
+      <button class="btn-unread">↩ Non lu</button>
+      <div class="card-content-wrap">
+        <div class="card-thumb-wrap">
+          <img class="card-thumb" src="${item.image || 'https://via.placeholder.com/300x170'}" loading="lazy">
+        </div>
+        <div class="card-body">
+          <span class="card-source">${escHtml(item.source)}</span>
+          <h2 class="card-title">${escHtml(item.title)}</h2>
+          <div class="card-footer">
+            <span class="card-date">${item.date_display}</span>
+            <button class="btn-get-summary">✦ Résumé IA</button>
+          </div>
+        </div>
+      </div>
+    </article>`;
+}
+
 function applyReadState() {
   const read = getReadSet();
-  grid.querySelectorAll('[data-url]').forEach(card => {
-    if (read.has(card.dataset.url)) {
-      card.classList.add('is-read');
-    }
-  });
-}
-
-function appendItems(items) {
-  const frag = document.createDocumentFragment();
-  const tmp = document.createElement('div');
-  items.forEach((item, i) => {
-    tmp.innerHTML = cardHTML(item, displayedCount + i);
-    frag.appendChild(tmp.firstElementChild);
-  });
-  grid.appendChild(frag);
-  applyReadState();
-  attachCardEventListeners();
-}
-
-function loadMore() {
-  const next = allItems.slice(displayedCount, displayedCount + PAGE_SIZE);
-  if (!next.length) return;
-  appendItems(next);
-  displayedCount += next.length;
-}
-
-const observer = new IntersectionObserver(entries => {
-  if (entries[0].isIntersecting) loadMore();
-}, { rootMargin: '300px' });
-observer.observe(sentinel);
-
-function speakText(text) {
-  if (!('speechSynthesis' in window)) {
-    showToast('❌ Synthèse vocale non supportée');
-    return;
-  }
-  speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = 'fr-FR';
-  utterance.onstart = () => btnTTS.classList.add('playing');
-  utterance.onend = () => btnTTS.classList.remove('playing');
-  speechSynthesis.speak(utterance);
-}
-
-btnTTS.addEventListener('click', (e) => {
-  e.stopPropagation();
-  if (speechSynthesis.speaking) speechSynthesis.cancel();
-  else speakText(modalSummary.textContent);
-});
-
-let previouslyFocused = null;
-
-function openModal(item) {
-  previouslyFocused = document.activeElement;
-  modalSource.textContent = item.source;
-  modalTitleEl.textContent = item.title;
-  modalMeta.textContent = `📅 ${item.date}`;
-  modalLink.href = item.url;
-  modalSummary.textContent = 'Analyse en cours…';
-  modalSummary.classList.add('loading');
-  backdrop.classList.add('open');
-  document.body.style.overflow = 'hidden';
-
-  fetch('/api/summarize', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ url: item.url, title: item.title, is_video: item.is_video }),
-  })
-  .then(r => r.json())
-  .then(data => {
-    modalSummary.textContent = data.summary || 'Aucun résumé disponible.';
-    modalSummary.classList.remove('loading');
-    
-    if (data.image) {
-        const cardImg = document.querySelector(`[data-url="${item.url}"] .card-thumb`);
-        if (cardImg) {
-            cardImg.src = '/api/img?url=' + encodeURIComponent(data.image);
-        }
-    }
-})
-  .catch(() => {
-    modalSummary.textContent = 'Erreur lors de la génération du résumé.';
-    modalSummary.classList.remove('loading');
-  });
-}
-
-function closeModal() {
-  backdrop.classList.remove('open');
-  document.body.style.overflow = '';
-  speechSynthesis.cancel();
-  btnTTS.classList.remove('playing');
-  if (previouslyFocused) previouslyFocused.focus();
-}
-
-function attachCardEventListeners() {
   grid.querySelectorAll('.card').forEach(card => {
+    if (read.has(card.dataset.url)) card.classList.add('is-read');
+  });
+}
+
+function attachEvents() {
+  grid.querySelectorAll('.card').forEach(card => {
+    const url = card.dataset.url;
+    
     card.addEventListener('click', (e) => {
       if (e.target.closest('.btn-get-summary') || e.target.closest('.btn-unread')) return;
-      const url = card.dataset.url;
       markAsRead(url);
       card.classList.add('is-read');
       window.open(url, '_blank');
     });
-  });
 
-  grid.querySelectorAll('.btn-get-summary').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
+    card.querySelector('.btn-get-summary').addEventListener('click', (e) => {
       e.stopPropagation();
-      const url = btn.dataset.url;
-      const card = btn.closest('.card');
       markAsRead(url);
       card.classList.add('is-read');
-      openModal({
-        url: url,
-        title: btn.dataset.title,
-        source: btn.dataset.source,
-        date: btn.dataset.date,
-        is_video: btn.dataset.isVideo === '1',
-      });
+      openModal(card.querySelector('.card-title').textContent, url, card.querySelector('.card-source').textContent);
     });
-  });
 
-  grid.querySelectorAll('.btn-unread').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
+    card.querySelector('.btn-unread').addEventListener('click', (e) => {
       e.stopPropagation();
-      const url = btn.dataset.url;
       const read = getReadSet();
       read.delete(url);
       localStorage.setItem(READ_KEY, JSON.stringify([...read]));
-      const card = btn.closest('.card');
-      if (card) card.classList.remove('is-read');
-      showToast('↩ Article marqué comme non lu');
+      card.classList.remove('is-read');
     });
   });
 }
 
-btnClose.addEventListener('click', closeModal);
-backdrop.addEventListener('click', e => { if (e.target === backdrop) closeModal(); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+function openModal(title, url, source) {
+  document.getElementById('modal-title-el').textContent = title;
+  document.getElementById('modal-source').textContent = source;
+  document.getElementById('modal-link').href = url;
+  modalSummary.textContent = "Génération du résumé...";
+  backdrop.classList.add('open');
+  
+  fetch('/api/summarize', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url, title })
+  })
+  .then(r => r.json())
+  .then(data => { modalSummary.textContent = data.summary; })
+  .catch(() => { modalSummary.textContent = "Erreur de résumé."; });
+}
 
 async function load(forceRefresh = false) {
-  if (forceRefresh) refreshBtn.classList.add('spinning');
-  grid.innerHTML = skeletons(3);
-  errorsEl.innerHTML = '';
-  allItems = [];
-  displayedCount = 0;
-
-  const params = new URLSearchParams({
-    type: state.type,
-    search: state.search,
-    source: state.source,
-    period: state.period,
-    refresh: forceRefresh ? '1' : '0',
-  });
-
-  loadTimeout = setTimeout(() => {
-    grid.innerHTML = `<div class="state"><div class="state-icon">⏱</div><h3>Chargement trop long</h3></div>`;
-    refreshBtn.classList.remove('spinning');
-  }, LOAD_TIMEOUT_MS);
-
+  grid.innerHTML = '<div class="state">Chargement...</div>';
+  const params = new URLSearchParams({ type: state.type, search: state.search, source: state.source, period: state.period, refresh: forceRefresh ? '1' : '0' });
+  
   try {
     const res = await fetch(`/api/feed?${params}`);
     const data = await res.json();
-    clearTimeout(loadTimeout);
+    allItems = data.items;
+    grid.innerHTML = allItems.map(item => cardHTML(item)).join('');
+    countBadge.textContent = `${data.total} résultats`;
+    
+    // Update Source list
+    sourceListEl.innerHTML = `<div class="side-item ${state.source===''?'active':''}" data-src="">Toutes</div>` + 
+      data.sources.map(s => `<div class="side-item ${state.source===s?'active':''}" data-src="${s}">${s}</div>`).join('');
+    
+    sourceListEl.querySelectorAll('.side-item').forEach(i => i.onclick = () => { state.source = i.dataset.src; load(); });
 
-    if (sourceListEl) {
-      sourceListEl.innerHTML = `
-        <div class="side-item${state.source === '' ? ' active' : ''}" data-src="">
-          <div class="side-item-dot"></div>
-          <span class="side-item-label">Toutes</span>
-          <span class="side-item-count">${data.total}</span>
-        </div>
-        ${data.sources.map(s => `
-        <div class="side-item${state.source === s ? ' active' : ''}" data-src="${escHtml(s)}">
-          <div class="side-item-dot"></div>
-          <span class="side-item-label">${escHtml(s)}</span>
-        </div>`).join('')}`;
-      sourceListEl.querySelectorAll('.side-item').forEach(item => {
-        item.addEventListener('click', () => {
-          state.source = item.dataset.src;
-          load();
-        });
-      });
-    }
-
-    data.errors?.forEach(e => {
-      errorsEl.innerHTML += `<div class="error-banner">⚠️ ${escHtml(e)}</div>`;
-    });
-
-    const n = data.total;
-    countBadge.textContent = `${n} résultat${n !== 1 ? 's' : ''}`;
-    lastUpdate.textContent = `Mis à jour ${relativeTime(data.fetch_ts)}`;
-    if (forceRefresh) showToast('✓ Articles mis à jour !');
-
-    grid.innerHTML = '';
-    if (data.items.length === 0) {
-      const isSearch = state.search || state.source;
-      grid.innerHTML = `<div class="state"><div class="state-icon">${isSearch ? '🔍' : '📡'}</div><h3>${isSearch ? 'Aucun résultat' : 'Aucun contenu'}</h3></div>`;
-    } else {
-      allItems = data.items;
-      loadMore();
-    }
-  } catch (err) {
-    clearTimeout(loadTimeout);
-    grid.innerHTML = `<div class="state"><div class="state-icon">📡</div><h3>Erreur de connexion</h3></div>`;
-  } finally {
-    refreshBtn.classList.remove('spinning');
-  }
+    applyReadState();
+    attachEvents();
+  } catch (e) { grid.innerHTML = "Erreur."; }
 }
 
-window.addEventListener('scroll', () => {
-  btnTop.classList.toggle('visible', window.scrollY > 200);
-}, { passive: true });
-btnTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+document.getElementById('btn-close-modal').onclick = () => backdrop.classList.remove('open');
+refreshBtn.onclick = () => load(true);
+sideSearchEl.oninput = (e) => { state.search = e.target.value; load(); };
 
-document.querySelectorAll('.tab').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    btn.classList.add('active');
-    state.type = btn.dataset.type;
-    state.source = '';
-    load();
-  });
-});
-
-sideSearchEl.addEventListener('input', () => {
-  clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(() => {
-    const value = sideSearchEl.value.trim();
-    if (value.length === 0 || value.length >= 2) {
-      state.search = value;
-      load();
-    }
-  }, 500);
-});
-
-const periodFilterEl = document.getElementById('period-filter');
-if (periodFilterEl) {
-  periodFilterEl.querySelectorAll('.period-item').forEach(item => {
-    item.addEventListener('click', () => {
-      periodFilterEl.querySelectorAll('.period-item').forEach(i => i.classList.remove('active'));
-      item.classList.add('active');
-      state.period = item.dataset.period;
-      load();
-    });
-  });
-}
-
-refreshBtn.addEventListener('click', () => load(true));
-
-const btnTheme = document.getElementById('btn-theme');
-const saved = localStorage.getItem('theme');
-if (saved === 'light') {
-  document.body.classList.add('light');
-  btnTheme.textContent = '☀️';
-}
-btnTheme.addEventListener('click', () => {
-  btnTheme.classList.add('rotating');
-  const isLight = document.body.classList.toggle('light');
-  btnTheme.textContent = isLight ? '☀️' : '🌙';
-  localStorage.setItem('theme', isLight ? 'light' : 'dark');
-  setTimeout(() => btnTheme.classList.remove('rotating'), 1200);
+// Tabs
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
+  document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+  t.classList.add('active');
+  state.type = t.dataset.type;
+  load();
 });
 
 load();
